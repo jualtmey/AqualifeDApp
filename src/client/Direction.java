@@ -17,4 +17,11 @@ public enum Direction {
 		return this == LEFT ? RIGHT : LEFT;
 	}
 
+	public static Direction toDirection(int d) {
+		if (d == -1) {
+			return LEFT;
+		} else {
+			return RIGHT;
+		}
+	}
 }
