@@ -1,83 +1,81 @@
 pragma solidity ^0.4.23;
 
 contract Broker {
-    
+
     struct Client {
         uint id;
         address left;
         address right;
     }
-    
-    // funktioniert nicht als Parameter für Funktionen
+
+    // funktioniert nicht als Parameter fÃ¼r Funktionen
     // UND "infinite" Gas Verbrauch entsteht ?
     struct Fish {
         string id;
         int x;
         int y;
-        Direction direction;
+        int direction;
     }
-    
-    enum Direction {
-        left,
-        right
-    }
-    
-    event HandoffFishEvent(
-        address recipient,
+
+    event HandoffFish(
+        address indexed recipient,
         string id,
         int x,
         int y,
-        Direction d
+        int direction
     );
-    
+
+    int constant LEFT = -1;
+    int constant RIGHT = 1;
+
     mapping (address => Client) public clients;
-    
+
     uint public clientIdCounter = 1;
     uint public size;
     address public firstClient;
     address public lastClient;
-    
+
     function register() public {
         if (size == 0) {
             firstClient = msg.sender;
             lastClient = msg.sender;
         }
-        
+
         clients[msg.sender] = Client(clientIdCounter, lastClient, firstClient);
         clients[firstClient].left = msg.sender;
         clients[lastClient].right =msg.sender;
-        
+
         lastClient = msg.sender;
-        
+
         clientIdCounter++;
         size++;
     }
-    
+
     function deregister() public {
         Client storage client = clients[msg.sender];
-        
+
         if (msg.sender == firstClient) {
             firstClient = client.right;
         }
         if (msg.sender == lastClient) {
             lastClient = client.left;
         }
-        
+
         clients[client.left].right = client.right;
         clients[client.right].left = client.left;
-        delete clients[msg.sender]; // nötig?
-        
+        delete clients[msg.sender]; // nÃ¶tig?
+
         size--;
     }
-    
-    function handoffFish(string id, int x, int y, Direction d) public {
+
+    function handoffFish(string id, int x, int y, int direction) public {
         // TODO: nur wenn Client registriert ist bzw. size > 0
-        
-        if (d == Direction.left) {
-            emit HandoffFishEvent(clients[msg.sender].left, id, x, y, d);
+
+        if (direction == LEFT) {
+            emit HandoffFish(clients[msg.sender].left, id, x, y, direction);
         } else { // right
-            emit HandoffFishEvent(clients[msg.sender].right, id, x, y, d);
+            emit HandoffFish(clients[msg.sender].right, id, x, y, direction);
         }
     }
-    
+
 }
