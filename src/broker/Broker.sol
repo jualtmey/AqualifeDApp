@@ -17,6 +17,11 @@ contract Broker {
         int direction;
     }
 
+    event Register(
+        address indexed recipient,
+        uint id
+    );
+
     event HandoffFish(
         address indexed recipient,
         string id,
@@ -46,6 +51,8 @@ contract Broker {
         clients[lastClient].right =msg.sender;
 
         lastClient = msg.sender;
+
+        emit Register(msg.sender, clientIdCounter);
 
         clientIdCounter++;
         size++;
