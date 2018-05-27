@@ -1,6 +1,7 @@
 package client;
 
 import com.sun.deploy.util.SessionState;
+import org.w3c.dom.ls.LSOutput;
 import org.web3j.abi.EventEncoder;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
@@ -18,8 +19,10 @@ import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Async;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -28,12 +31,8 @@ import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class ClientCommunicator {
 
-    private static final String BROKER_ADDRESS = "0xfb0caf5ac51f50ce6ae689a38d03fc38341b2602"; // geth
+    private static final String BROKER_ADDRESS = "0xfdc6ea239fccd3c8f444219f6bc4b91ff4a9c2f5"; // geth
 //    private static final String BROKER_ADDRESS = "0xb3ac42c3fff85d60653a02de561b9d4220968423"; // ganache
-    private static final String ADDRESS = "0x6b39fa36eac4acc31f4f89c0b7c71eb3f75beddd"; // geth
-//    private static final String ADDRESS = "0x2eee044a1c214e04347fe9ebe4bf591a5c2e6624"; // geth
-//    private static final String ADDRESS = "0x969d5551790cad57e9dae845e5b4a00255a2a04c"; // geth
-//    private static final String ADDRESS = "0xd4C2f4999E1eBa3DB8C678196bBfe62659835B5f"; // ganache
 
     public static final int POLLING_INTERVAL = 100; // millis
 
@@ -41,9 +40,13 @@ public class ClientCommunicator {
     private Credentials credentials;
     private Broker broker;
 
+    private String address;
+
     private static final Logger LOGGER = Logger.getLogger(ClientCommunicator.class.getName());
 
     private TankModel tankModel;
+    private ClientForwarder forwarder;
+    private ClientReceiver receiver;
 
     public ClientCommunicator() {
         LOGGER.setLevel(Level.INFO);
@@ -60,6 +63,32 @@ public class ClientCommunicator {
         String clientVersion = web3ClientVersion.getWeb3ClientVersion();
         LOGGER.info("Client version:\n" + clientVersion);
 
+        String[] accounts = accounts();
+        if (accounts == null) {
+            LOGGER.info("No accounts");
+            return;
+        }
+
+        String selectedAccount = (String) JOptionPane.showInputDialog(
+                null,
+                "Select your account:\n",
+                "Accounts",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                accounts,
+                accounts[0]);
+
+        if (selectedAccount == null) {
+            // TODO: exit or error
+            return;
+        }
+
+        setAddress(selectedAccount);
+
+        initBroker();
+    }
+
+    public void initBroker() {
 //        try {
 //            credentials = WalletUtils.loadCredentials("test", "./test/ethereum/keystore/UTC--2018-05-23T13-34-07.274467000Z--6b39fa36eac4acc31f4f89c0b7c71eb3f75beddd");
 ////            credentials = WalletUtils.loadCredentials("test", "./test/ethereum/keystore/UTC--2018-05-23T13-36-51.878844000Z--2eee044a1c214e04347fe9ebe4bf591a5c2e6624");
@@ -72,7 +101,7 @@ public class ClientCommunicator {
 
 //        broker = Broker.load(BROKER_ADDRESS, web3, credentials, GAS_PRICE, BigInteger.valueOf(2100000L));
 //        TransactionManager fastRawTransactionManager = new FastRawTransactionManager(web3, credentials, (byte) 55);
-        TransactionManager transactionManager = new ClientTransactionManager(web3, ADDRESS, 600, POLLING_INTERVAL);
+        TransactionManager transactionManager = new ClientTransactionManager(web3, address, 600, POLLING_INTERVAL);
         broker = Broker.load(BROKER_ADDRESS, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
 
         try {
@@ -102,7 +131,28 @@ public class ClientCommunicator {
     public static String addressToTopic(String address) {
         // address expected with leading '0x'
         // length of topic needs to be 64 characters (32 byte / 256 bit)
-        return "0x000000000000000000000000" + ADDRESS.substring(2);
+        return "0x000000000000000000000000" + address.substring(2);
+    }
+
+    public void setAddress(String address) {
+        if (broker == null) {
+            this.address = address;
+        } else {
+            LOGGER.info("Address cannot be changed, if broker is initialized.");
+        }
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String[] accounts() {
+        try {
+            return web3.ethAccounts().send().getAccounts().toArray(new String[0]);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public class ClientForwarder {
@@ -136,11 +186,15 @@ public class ClientCommunicator {
             try {
                 broker.handoffFish(
                         fish.getId(), BigInteger.valueOf(fish.getX()), BigInteger.valueOf(fish.getY()),
-                        BigInteger.valueOf(fish.getDirection().getVector())).sendAsync();
+                        BigInteger.valueOf(fish.getDirection().getVector())).sendAsync()
+                        .thenAccept(transactionReceipt -> {
+                            System.out.println("Fish sent: " + fish.getId());
+                });
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+
     }
 
     public class ClientReceiver {
@@ -154,17 +208,16 @@ public class ClientCommunicator {
             EthFilter registerFilter = new EthFilter(DefaultBlockParameterName.LATEST,
                     DefaultBlockParameterName.LATEST, broker.getContractAddress())
                     .addSingleTopic(EventEncoder.encode(Broker.REGISTER_EVENT))
-                    .addSingleTopic(addressToTopic(ADDRESS));
+                    .addSingleTopic(addressToTopic(address));
 
             EthFilter handoffFishFilter = new EthFilter(DefaultBlockParameterName.LATEST,
                     DefaultBlockParameterName.LATEST, broker.getContractAddress())
                     .addSingleTopic(EventEncoder.encode(Broker.HANDOFFFISH_EVENT))
-                    .addSingleTopic(addressToTopic(ADDRESS));
+                    .addSingleTopic(addressToTopic(address));
 
 
 
             broker.registerEventObservable(registerFilter).subscribe(event -> {
-                System.out.println(event.log);
                 LOGGER.info("--- New Register Event ---");
                 LOGGER.info(String.format("Recipient: %s%nID: %s%n",
                         event.recipient, event.id));
@@ -177,6 +230,7 @@ public class ClientCommunicator {
 //                }
             });
 
+            // TODO: handoff (auch) nur empfangen, wenn TankID übereinstimmt? Nach TankID filtern, Adresse weglassen?
             broker.handoffFishEventObservable(handoffFishFilter).subscribe(event -> {
                 LOGGER.info("--- New Handoff Event ---");
                 LOGGER.info(String.format("Recipient: %s%nFishID: %s%nX: %s%nY: %s%nDirection: %s%n",
@@ -227,11 +281,23 @@ public class ClientCommunicator {
     }
 
     public ClientForwarder newClientForwarder() {
-        return new ClientForwarder();
+        if (broker == null) {
+            throw new RuntimeException("Broker not initialized");
+        }
+        if (forwarder == null) {
+            forwarder = new ClientForwarder();
+        }
+        return forwarder;
     }
 
     public ClientReceiver newClientReceiver(TankModel tankModel) {
-        return new ClientReceiver(tankModel);
+        if (broker == null) {
+            throw new RuntimeException("Broker not initialized");
+        }
+        if (receiver == null) {
+            receiver = new ClientReceiver(tankModel);
+        }
+        return receiver;
     }
 
 }

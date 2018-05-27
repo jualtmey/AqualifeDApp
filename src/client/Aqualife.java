@@ -6,11 +6,15 @@ public class Aqualife {
 
     public static void main(String[] args) {
         ClientCommunicator communicator = new ClientCommunicator();
+
+
+//        AqualifeController aqualifeController = new AqualifeController(communicator);
+
         TankModel tankModel = new TankModel(communicator.newClientForwarder());
 
-        communicator.newClientReceiver(tankModel).start();
+        SwingUtilities.invokeLater(new AquaGui(tankModel, communicator));
 
-        SwingUtilities.invokeLater(new AquaGui(tankModel));
+        communicator.newClientReceiver(tankModel).start();
 
         tankModel.run();
     }

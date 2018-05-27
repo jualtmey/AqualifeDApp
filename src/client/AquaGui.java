@@ -1,9 +1,11 @@
 package client;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.*;
+import java.util.List;
 
 @SuppressWarnings("serial")
 public class AquaGui extends JFrame implements Runnable, Observer {
@@ -13,7 +15,7 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 	private final JMenu searchMenu;
 	private final Runnable updateRunnable;
 
-	public AquaGui(final TankModel tankModel) {
+	public AquaGui(final TankModel tankModel, ClientCommunicator communicator) {
 		TankView tankView = new TankView(tankModel);
 		tankModel.addObserver(tankView);
 		add(tankView);
@@ -46,6 +48,9 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 		toolsMenu.add(searchMenu);
 		tankModel.addObserver(this);
 
+		menuBar.add(new JSeparator(SwingConstants.VERTICAL));
+		menuBar.add(new JLabel("Address: " + communicator.getAddress() + " "));
+
 		updateRunnable = new Runnable() {
 			@Override
 			public void run() {
@@ -61,6 +66,10 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 				}
 			}
 		};
+	}
+
+	public void showAccountSelectionDialog(String[] accounts) {
+
 	}
 
 	@Override
