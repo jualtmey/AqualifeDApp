@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import subprocess
 import json
 
 
@@ -14,14 +15,26 @@ PATH_ACCOUNT_PASSWD = "./test/passwd.txt"
 ACCOUNT_NUM = 5
 
 
-def create_accounts():
-    print("Create " + str(ACCOUNT_NUM) + " accounts...") 
-    print("Password for each account specified in '" + PATH_ACCOUNT_PASSWD + "'")
-    for i in range(ACCOUNT_NUM):
-        os.system("geth --datadir " + PATH_GETH_DATADIR + " account new --password " + PATH_ACCOUNT_PASSWD)
+def create_account():
+    
+    result_str = subprocess.run("geth account new --password " + PATH_ACCOUNT_PASSWD + " --datadir " + PATH_GETH_DATADIR, stdout=subprocess.PIPE).stdout.decode('ascii')
+    print(result_str.strip("{"))
+    result_str.strip("{")
+    #os.system("geth --datadir " + PATH_GETH_DATADIR + " account new --password " + PATH_ACCOUNT_PASSWD)
+
+
+def add_account_to_genesis(address):
+    print("Adding account to genesis file...")
 
 
 def init():
+    print("Create " + str(ACCOUNT_NUM) + " accounts...")
+    print("Password for each account specified in '" + PATH_ACCOUNT_PASSWD + "'")
+
+    for i in range(ACCOUNT_NUM):
+        address = create_account()
+        add_account_to_genesis(address)
+
     print("Initialize test blockchain...")
     os.system("geth --networkid 55 init ./test/Genesis.json --datadir " + PATH_GETH_DATADIR)
 
@@ -71,8 +84,7 @@ def run():
 
 def print_help():
     print("Possible arguments:")
-    print("\tinit - initialize the test blockchain using genesis file")
-    print("\tcreateAccounts - create some test accounts")
+    print("\tinit - create several test accounts and initialize the test blockchain using genesis file")
     print("\tbuild - compile smart contract and create wrapper class")
     print("\trun - start the geth test node")
     print("\tcleandb - remove the geth database")
@@ -94,8 +106,6 @@ def main():
         build()
     elif argument == "init":
         init()
-    elif argument == "createAccounts":
-        create_accounts()
     elif argument == "cleandb":
         clean_geth_db()
     elif argument == "clean":
