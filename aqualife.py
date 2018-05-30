@@ -11,29 +11,48 @@ PATH_SMART_CONTRACT_SRC = "./src/broker/"
 PATH_SMART_CONTRACT_OUT = "./contract/"
 PATH_GETH_DATADIR = "./test/ethereum/"
 PATH_ACCOUNT_PASSWD = "./test/passwd.txt"
+PATH_GENESIS_FILE = "./test/genesis.json"
 
 ACCOUNT_NUM = 5
+DEFAULT_ETHER = "100000000000000000000"  # in Wei
 
 
 def create_account():
-    
     result_str = subprocess.run("geth account new --password " + PATH_ACCOUNT_PASSWD + " --datadir " + PATH_GETH_DATADIR, stdout=subprocess.PIPE).stdout.decode('ascii')
-    print(result_str.strip("{"))
-    result_str.strip("{")
-    #os.system("geth --datadir " + PATH_GETH_DATADIR + " account new --password " + PATH_ACCOUNT_PASSWD)
+
+    # extract the address from the geth output. Output looks like: "Address: {...}"
+    start = result_str.find('{') + 1
+    end = result_str.find('}', start)
+    print("Account created: " + result_str[start:end])
+
+    return result_str[start:end]
 
 
-def add_account_to_genesis(address):
-    print("Adding account to genesis file...")
+def add_accounts_to_genesis(addresses):
+    print("Adding accounts to genesis file...")
+
+    with open(PATH_GENESIS_FILE, "r+") as json_file:
+        data = json.load(json_file)
+        data["alloc"].clear()
+
+        for address in addresses:
+            data["alloc"][address] = {"balance": DEFAULT_ETHER}
+
+        json_file.seek(0)
+        json.dump(data, json_file, indent=4)
+        json_file.truncate()
 
 
 def init():
     print("Create " + str(ACCOUNT_NUM) + " accounts...")
     print("Password for each account specified in '" + PATH_ACCOUNT_PASSWD + "'")
 
+    addresses = []
     for i in range(ACCOUNT_NUM):
         address = create_account()
-        add_account_to_genesis(address)
+        addresses.append(address)
+
+    add_accounts_to_genesis(addresses)
 
     print("Initialize test blockchain...")
     os.system("geth --networkid 55 init ./test/Genesis.json --datadir " + PATH_GETH_DATADIR)
@@ -55,7 +74,7 @@ def generate_web3j_wrapper():
 
     path_contract_bin = PATH_SMART_CONTRACT_OUT + NAME_SMART_CONTRACT + ".bin"
     path_contract_abi = PATH_SMART_CONTRACT_OUT + NAME_SMART_CONTRACT + ".abi"
-    
+
     os.system("web3j solidity generate " + path_contract_bin + " " + path_contract_abi + " -o ./src/ -p client")
 
 
@@ -84,7 +103,7 @@ def run():
 
 def print_help():
     print("Possible arguments:")
-    print("\tinit - create several test accounts and initialize the test blockchain using genesis file")
+    print("\tinit - create several test accounts and initialize the test blockchain using the genesis file")
     print("\tbuild - compile smart contract and create wrapper class")
     print("\trun - start the geth test node")
     print("\tcleandb - remove the geth database")
@@ -96,8 +115,8 @@ def main():
     if len(sys.argv) != 2:
         print("Please call with one argument:")
         print_help()
-        return 
-    
+        return
+
     argument = sys.argv[1]
 
     if argument == "run":
@@ -114,7 +133,7 @@ def main():
         print("Unknown argument.")
         print_help()
         return
-    
+
     print("Program finished.")
 
 
