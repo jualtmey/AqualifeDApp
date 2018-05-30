@@ -1,5 +1,6 @@
 geth init ./test/Genesis.json --datadir ./test/ethereum
 geth --networkid 55 --nodiscover --maxpeers 0 --rpc --rpccorsdomain "https://remix.ethereum.org" --datadir ./test/ethereum console
+geth --testnet --syncmode "light" --rpc --rpccorsdomain "https://remix.ethereum.org" --datadir ./test/ropsten console
 geth account new --datadir ./test/ethereum
 geth removedb --datadir ./test/ethereum
 
