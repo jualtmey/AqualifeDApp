@@ -75,6 +75,29 @@ contract FishBase is ERC721, ERC721Metadata {
         return fishies[_tokenId].name;
     }
 
+    function tokensOfOwner(address _owner) public view returns (uint256[] ownerTokens) {
+        uint256 tokenCount = ownershipTokenCount[_owner];
+
+        if (tokenCount == 0) {
+            return new uint256[](0);
+        } else {
+            uint256[] memory result = new uint256[](tokenCount);
+            uint256 totalFishToken = fishies.length;
+            uint256 resultIndex = 0;
+
+            uint256 tokenId;
+
+            for (tokenId = 0; tokenId < totalFishToken; tokenId++) {
+                if (fishIndexToOwner[tokenId] == _owner) {
+                    result[resultIndex] = tokenId;
+                    resultIndex++;
+                }
+            }
+
+            return result;
+        }
+    }
+
     // === ERC721 FUNCTIONS ===
 
     function balanceOf(address _owner) external view returns (uint256) {
