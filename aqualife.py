@@ -93,8 +93,10 @@ def clean_geth_db():
 
 def clean():
     clean_geth_db()
-    shutil.rmtree(PATH_GETH_DATADIR)
-    shutil.rmtree(PATH_SMART_CONTRACT_OUT)
+    if os.path.exists(PATH_GETH_DATADIR):
+        shutil.rmtree(PATH_GETH_DATADIR)
+    if os.path.exists(PATH_SMART_CONTRACT_OUT):
+        shutil.rmtree(PATH_SMART_CONTRACT_OUT)
 
 
 def run():
