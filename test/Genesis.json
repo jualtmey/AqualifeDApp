@@ -5,8 +5,8 @@
         "eip158Block": 0,
         "homesteadBlock": 0
     },
-    "gasLimit": "2100000",
-    "difficulty": "100",
+    "gasLimit": "8000000",
+    "difficulty": "10",
     "alloc": {
 
     }
