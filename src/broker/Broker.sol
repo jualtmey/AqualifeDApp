@@ -85,7 +85,7 @@ contract Broker {
 
         lastClient = msg.sender;
 
-        emit Register(msg.sender, clientIdCounter);
+        emit Register(msg.sender, tankId);
 
         size++;
     }

@@ -42,8 +42,6 @@ contract FishBase is ERC721, ERC721Metadata {
     // === FUNCTIONS ===
 
     function createFish(address _owner, string _name) public onlyBroker returns (uint256) {
-        // TODO: specify who is allowed to create fish
-
         FishToken memory fish = FishToken(_name, _owner);
 
         uint256 newFishId = fishies.push(fish) - 1;
