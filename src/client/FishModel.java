@@ -1,6 +1,7 @@
 package client;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Random;
 
 @SuppressWarnings("serial")
@@ -9,6 +10,7 @@ public final class FishModel implements Serializable {
 	private final static int ySize = 50;
 	private final static Random rand = new Random();
 
+	private final BigInteger tokenId;
 	private final String id;
 	private int x;
 	private int y;
@@ -16,11 +18,16 @@ public final class FishModel implements Serializable {
 
 	private boolean toggled;
 
-	public FishModel(String id, int x, int y, Direction direction) {
+	public FishModel(BigInteger tokenId, String id, int x, int y, Direction direction) {
+		this.tokenId = tokenId;
 		this.id = id;
 		this.x = x;
 		this.y = y;
 		this.direction = direction;
+	}
+
+	public BigInteger getTokenId() {
+		return tokenId;
 	}
 
 	public String getId() {

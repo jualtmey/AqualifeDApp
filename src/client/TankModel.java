@@ -29,17 +29,18 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 //		newFish(WIDTH - FishModel.getXSize(), rand.nextInt(HEIGHT - FishModel.getYSize()));
 	}
 
-	public synchronized void newFish(int x, int y) {
-		if (fishies.size() < MAX_FISHIES) {
-			x = x > WIDTH - FishModel.getXSize() - 1 ? WIDTH - FishModel.getXSize() - 1 : x;
-			y = y > HEIGHT - FishModel.getYSize() ? HEIGHT - FishModel.getYSize() : y;
-
-			FishModel fish = new FishModel("fish" + (++fishCounter) + "@" + getId(), x, y,
-					rand.nextBoolean() ? Direction.LEFT : Direction.RIGHT);
-
-			fishies.add(fish);
-		}
-	}
+	// Only broker is allowed to create fish
+//	public synchronized void newFish(int x, int y) {
+//		if (fishies.size() < MAX_FISHIES) {
+//			x = x > WIDTH - FishModel.getXSize() - 1 ? WIDTH - FishModel.getXSize() - 1 : x;
+//			y = y > HEIGHT - FishModel.getYSize() ? HEIGHT - FishModel.getYSize() : y;
+//
+//			FishModel fish = new FishModel("fish" + (++fishCounter) + "@" + getId(), x, y,
+//					rand.nextBoolean() ? Direction.LEFT : Direction.RIGHT);
+//
+//			fishies.add(fish);
+//		}
+//	}
 
 	synchronized void receiveFish(FishModel fish) {
 		fish.setToStart();

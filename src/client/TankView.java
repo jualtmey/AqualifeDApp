@@ -30,7 +30,7 @@ public class TankView extends JPanel implements Observer {
 		addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				tankModel.newFish(e.getX(), e.getY());
+//				tankModel.newFish(e.getX(), e.getY());
 			}
 		});
 	}

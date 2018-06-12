@@ -31,7 +31,7 @@ import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class ClientCommunicator {
 
-    private static final String BROKER_ADDRESS = "0xfdc6ea239fccd3c8f444219f6bc4b91ff4a9c2f5"; // geth
+    private static final String BROKER_ADDRESS = "0xffbda8237fd0b6c875910015330433fe6ddd8107"; // geth
 //    private static final String BROKER_ADDRESS = "0xb3ac42c3fff85d60653a02de561b9d4220968423"; // ganache
 
     public static final int POLLING_INTERVAL = 100; // millis
@@ -185,7 +185,7 @@ public class ClientCommunicator {
             LOGGER.info("Handoff " + fish.getId());
             try {
                 broker.handoffFish(
-                        fish.getId(), BigInteger.valueOf(fish.getX()), BigInteger.valueOf(fish.getY()),
+                        fish.getTokenId(), BigInteger.valueOf(fish.getY()),
                         BigInteger.valueOf(fish.getDirection().getVector())).sendAsync()
                         .thenAccept(transactionReceipt -> {
                             System.out.println("Fish sent: " + fish.getId());
@@ -220,9 +220,9 @@ public class ClientCommunicator {
             broker.registerEventObservable(registerFilter).subscribe(event -> {
                 LOGGER.info("--- New Register Event ---");
                 LOGGER.info(String.format("Recipient: %s%nID: %s%n",
-                        event.recipient, event.id));
+                        event.recipient, event.tankId));
 
-                tankModel.onRegistration("Tank" + event.id);
+                tankModel.onRegistration("Tank" + event.tankId);
 
                 // only needed without an address-topic filter
 //                if (event.recipient.equals(ADDRESS)) {
@@ -233,11 +233,11 @@ public class ClientCommunicator {
             // TODO: handoff (auch) nur empfangen, wenn TankID übereinstimmt? Nach TankID filtern, Adresse weglassen?
             broker.handoffFishEventObservable(handoffFishFilter).subscribe(event -> {
                 LOGGER.info("--- New Handoff Event ---");
-                LOGGER.info(String.format("Recipient: %s%nFishID: %s%nX: %s%nY: %s%nDirection: %s%n",
-                        event.recipient, event.id, event.x, event.y, event.direction));
+                LOGGER.info(String.format("Recipient: %s%nTokenID: %s%nFishName: %s%nOwnerTankID: %s%nY: %s%nDirection: %s%n",
+                        event.recipient, event.tokenId, event.fishName, event.ownerTankId, event.direction));
 
                 Direction direction = Direction.toDirection(event.direction.intValue());
-                FishModel fish = new FishModel(event.id, event.x.intValue(), event.y.intValue(), direction);
+                FishModel fish = new FishModel(event.tokenId, event.fishName, event.ownerTankId.intValue(), event.y.intValue(), direction);
                 tankModel.receiveFish(fish);
 
                 // only needed without an address-topic filter
