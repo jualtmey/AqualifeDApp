@@ -9,6 +9,7 @@ contract FishBase is ERC721, ERC721Metadata {
 
     struct FishToken {
         string name;
+        uint32 uniqueData; // color information of fish
         address currentTank;
     }
 
@@ -42,13 +43,20 @@ contract FishBase is ERC721, ERC721Metadata {
     // === FUNCTIONS ===
 
     function createFish(address _owner, string _name) public onlyBroker returns (uint256) {
-        FishToken memory fish = FishToken(_name, _owner);
+        FishToken memory fish = FishToken(_name, generateUniqueData(), _owner);
 
         uint256 newFishId = fishies.push(fish) - 1;
 
         transfer(0, _owner, newFishId);
 
         return newFishId;
+    }
+
+    function generateUniqueData() private returns (uint32) {
+        // random is not simple to implement
+        // TODO: what if more than one fish are generated in same block?
+        // Do they have the same data?
+        return uint32(blockhash(block.number - 1)); // converts last 4 bytes of hash to uint32
     }
 
     function handoffFish(address _from, address _to, uint256 _tokenId) public onlyBroker {
@@ -69,8 +77,9 @@ contract FishBase is ERC721, ERC721Metadata {
         emit Transfer(_from, _to, _tokenId);
     }
 
-    function fishName(uint256 _tokenId) public view returns (string) {
-        return fishies[_tokenId].name;
+    function getFishToken(uint256 _tokenId) public view returns (string, uint32, address) {
+        FishToken storage fish = fishies[_tokenId];
+        return (fish.name, fish.uniqueData, fish.currentTank);
     }
 
     function tokensOfOwner(address _owner) public view returns (uint256[] ownerTokens) {

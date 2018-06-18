@@ -24,6 +24,7 @@ contract Broker {
         address indexed recipient,
         uint256 tokenId,
         string fishName,
+        uint32 fishUniqueData,
         uint256 ownerTankId,
         int y,
         int8 direction
@@ -37,7 +38,6 @@ contract Broker {
     // === STORAGE ===
 
     mapping (address => Client) public clients;
-    mapping (address => uint256) public balanceOf;
 
     uint public clientIdCounter = 1;
     uint public size;
@@ -45,6 +45,8 @@ contract Broker {
     address public lastClient;
 
     FishBase public fishBase;
+
+    uint public createFishPrice = 1e18; // in Wei (1e18 Wei = 1 Ether)
 
     // === MODIFIER ===
 
@@ -55,6 +57,11 @@ contract Broker {
 
     modifier whenNotRegistered {
         require(!clients[msg.sender].registered, "You are already registered.");
+        _;
+    }
+
+    modifier costs(uint price) {
+        require(msg.value >= price, "Not enough money.");
         _;
     }
 
@@ -75,7 +82,6 @@ contract Broker {
         uint256 tankId = clients[msg.sender].tankId;
         if (tankId == 0) {
             tankId = clientIdCounter;
-            balanceOf[msg.sender] = 5;
             clientIdCounter++;
         }
 
@@ -107,15 +113,12 @@ contract Broker {
         size--;
     }
 
-    function createFish(string name) public whenRegistered {
-        uint256 fishPrice = 5;
+    function createFish(string _name) public payable whenRegistered costs(createFishPrice) {
+        uint256 tokenId = fishBase.createFish(msg.sender, _name);
 
-        require(balanceOf[msg.sender] >= fishPrice, "Not enough money.");
+        (string memory fishName, uint32 fishUniqueData, ) = fishBase.getFishToken(tokenId);
 
-        balanceOf[msg.sender] -= fishPrice;
-        uint256 tokenId = fishBase.createFish(msg.sender, name);
-
-        emit HandoffFish(msg.sender, tokenId, name, clients[msg.sender].tankId, 0, 0);
+        emit HandoffFish(msg.sender, tokenId, fishName, fishUniqueData, clients[msg.sender].tankId, 0, 0);
     }
 
     function handoffFish(uint256 _tokenId, int _y, int8 _direction) public whenRegistered {
@@ -129,12 +132,10 @@ contract Broker {
 
         fishBase.handoffFish(msg.sender, to, _tokenId);
 
-        string memory fishName = fishBase.fishName(_tokenId);
+        (string memory fishName, uint32 fishUniqueData, ) = fishBase.getFishToken(_tokenId);
         uint256 ownerTankId = clients[fishBase.ownerOf(_tokenId)].tankId;
 
-        balanceOf[msg.sender]++;
-
-        emit HandoffFish(to, _tokenId, fishName, ownerTankId, _y, _direction);
+        emit HandoffFish(to, _tokenId, fishName, fishUniqueData, ownerTankId, _y, _direction);
     }
 
     function summonFish(uint256 _tokenId) public whenRegistered {
@@ -142,7 +143,9 @@ contract Broker {
 
         fishBase.handoffFish(msg.sender, _tokenId);
 
-        emit HandoffFish(msg.sender, _tokenId, fishBase.fishName(_tokenId), clients[msg.sender].tankId, 0, 0);
+        (string memory fishName, uint32 fishUniqueData, ) = fishBase.getFishToken(_tokenId);
+
+        emit HandoffFish(msg.sender, _tokenId, fishName, fishUniqueData, clients[msg.sender].tankId, 0, 0);
     }
 
 }

@@ -7,6 +7,7 @@ import org.web3j.tx.TransactionManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
@@ -37,6 +38,17 @@ public class DeploySmartContract {
         }
 
         System.out.println("Address of contract: " + contract.getContractAddress());
+
+        try {
+            System.out.println(contract.register().send().getLogs());
+
+            System.out.println(contract.fishBase().send());
+
+
+            contract.createFish("hallo", BigInteger.valueOf(1000000000000000000L)).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void deployOnGanache() {
