@@ -72,10 +72,11 @@ def compile_contract():
 def generate_web3j_wrapper():
     print("Generate web3j wrapper class...")
 
-    path_contract_bin = PATH_SMART_CONTRACT_OUT + NAME_SMART_CONTRACT + ".bin"
-    path_contract_abi = PATH_SMART_CONTRACT_OUT + NAME_SMART_CONTRACT + ".abi"
-
-    os.system("web3j solidity generate " + path_contract_bin + " " + path_contract_abi + " -o ./src/ -p client")
+    files = os.listdir(PATH_SMART_CONTRACT_OUT)
+    for i in range(0, len(files), 2):
+        path_contract_abi = PATH_SMART_CONTRACT_OUT + files[i]
+        path_contract_bin = PATH_SMART_CONTRACT_OUT + files[i + 1]
+        os.system("web3j solidity generate " + path_contract_bin + " " + path_contract_abi + " -o ./src/ -p client.contracts")
 
 
 def build():

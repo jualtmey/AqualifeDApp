@@ -1,8 +1,9 @@
 pragma solidity ^0.4.24;
 
+import "./Ownable.sol";
 import "./FishBase.sol";
 
-contract Broker {
+contract Broker is Ownable {
 
     // === STRUCTS ===
 
@@ -23,21 +24,24 @@ contract Broker {
     event HandoffFish(
         address indexed recipient,
         uint256 tokenId,
-        string fishName,
-        uint32 fishUniqueData,
-        uint256 ownerTankId,
         int y,
         int8 direction
     );
 
+    event SummonFish(
+        address indexed recipient,
+        uint256 tokenId
+    );
+
     // === CONSTANTS ===
 
-    int constant LEFT = -1;
-    int constant RIGHT = 1;
+    int constant DIRECTION_LEFT = -1;
+    int constant DIRECTION_RIGHT = 1;
 
     // === STORAGE ===
 
     mapping (address => Client) public clients;
+    mapping (uint256 => address) public tokenIdToCurrentTank;
 
     uint public clientIdCounter = 1;
     uint public size;
@@ -45,8 +49,6 @@ contract Broker {
     address public lastClient;
 
     FishBase public fishBase;
-
-    uint public createFishPrice = 1e18; // in Wei (1e18 Wei = 1 Ether)
 
     // === MODIFIER ===
 
@@ -60,15 +62,15 @@ contract Broker {
         _;
     }
 
-    modifier costs(uint price) {
-        require(msg.value >= price, "Not enough money.");
+    modifier holds(uint256 tokenId) {
+        require(tokenIdToCurrentTank[tokenId] == msg.sender, "Fish isn't in your tank.");
         _;
     }
 
     // === CONSTRUCTOR ===
 
     constructor() public {
-        fishBase = new FishBase(address(this));
+        // fishBase = new FishBase(address(this));
     }
 
     // === FUNCTIONS ===
@@ -113,39 +115,33 @@ contract Broker {
         size--;
     }
 
-    function createFish(string _name) public payable whenRegistered costs(createFishPrice) {
-        uint256 tokenId = fishBase.createFish(msg.sender, _name);
-
-        (string memory fishName, uint32 fishUniqueData, ) = fishBase.getFishToken(tokenId);
-
-        emit HandoffFish(msg.sender, tokenId, fishName, fishUniqueData, clients[msg.sender].tankId, 0, 0);
-    }
-
-    function handoffFish(uint256 _tokenId, int _y, int8 _direction) public whenRegistered {
+    function handoffFish(uint256 _tokenId, int _y, int8 _direction) external whenRegistered holds(_tokenId) {
+        // TODO: check whether tokenId exists?
+        // TODO: direction and y could be manipulated by malicious clients (e.g. two adjacent clients hold all fishies by sending them left/right)
         address to;
 
-        if (_direction == LEFT) {
+        if (_direction == DIRECTION_LEFT) {
             to = clients[msg.sender].left;
         } else { // right
             to = clients[msg.sender].right;
         }
 
-        fishBase.handoffFish(msg.sender, to, _tokenId);
+        tokenIdToCurrentTank[_tokenId] = to;
 
-        (string memory fishName, uint32 fishUniqueData, ) = fishBase.getFishToken(_tokenId);
-        uint256 ownerTankId = clients[fishBase.ownerOf(_tokenId)].tankId;
-
-        emit HandoffFish(to, _tokenId, fishName, fishUniqueData, ownerTankId, _y, _direction);
+        emit HandoffFish(to, _tokenId, _y, _direction);
     }
 
-    function summonFish(uint256 _tokenId) public whenRegistered {
-        require(msg.sender == fishBase.ownerOf(_tokenId), "Only for owners of this fish.");
+    function summonFish(uint256 _tokenId) external whenRegistered {
+        require(tokenIdToCurrentTank[_tokenId] != msg.sender, "Tank holds fish already.");
+        // require(msg.sender == fishBase.ownerOf(_tokenId), "For owner of this fish only.");
 
-        fishBase.handoffFish(msg.sender, _tokenId);
+        tokenIdToCurrentTank[_tokenId] = msg.sender;
 
-        (string memory fishName, uint32 fishUniqueData, ) = fishBase.getFishToken(_tokenId);
+        emit SummonFish(msg.sender, _tokenId);
+    }
 
-        emit HandoffFish(msg.sender, _tokenId, fishName, fishUniqueData, clients[msg.sender].tankId, 0, 0);
+    function setFishBase(address _newAddress) external onlyOwner {
+        fishBase = FishBase(_newAddress);
     }
 
 }

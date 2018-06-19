@@ -23,7 +23,9 @@ function unlockAllAccounts() {
 
 unlockAllAccounts();
 
-eth.filter("latest", function(err, block) { checkWork(); });
-eth.filter("pending", function(err, block) { checkWork(); });
+// eth.filter("latest", function(err, block) { checkWork(); });
+// eth.filter("pending", function(err, block) { checkWork(); });
+//
+// checkWork();
 
-checkWork();
+miner.start(mining_threads);

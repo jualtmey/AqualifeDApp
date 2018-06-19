@@ -1,44 +1,44 @@
 package client;
 
-import com.sun.deploy.util.SessionState;
-import org.w3c.dom.ls.LSOutput;
+import client.contracts.Broker;
+import client.contracts.FishBase;
 import org.web3j.abi.EventEncoder;
-import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
-import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tuples.generated.Tuple2;
 import org.web3j.tx.ClientTransactionManager;
-import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Async;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.List;
+import java.util.Random;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class ClientCommunicator {
 
-    private static final String BROKER_ADDRESS = "0xffbda8237fd0b6c875910015330433fe6ddd8107"; // geth
-//    private static final String BROKER_ADDRESS = "0xb3ac42c3fff85d60653a02de561b9d4220968423"; // ganache
+    private static final String BROKER_ADDRESS = "0xd477537d8088e7b8a1a06d9d51e8f066f15bb028";
+    private static final String FISH_BASE_ADDRESS = "0x9469ea20c4f6fef59f558deb03805c667775e7d6";
 
-    public static final int POLLING_INTERVAL = 100; // millis
+    // in millis
+    private static final int POLLING_INTERVAL = 1000;
+    private static final int POLLING_TIMEOUT = 60000;
+    private static final int POLLING_ATTEMPTS = POLLING_TIMEOUT / POLLING_INTERVAL;
 
     private Web3j web3;
     private Credentials credentials;
+
     private Broker broker;
+    private FishBase fishBase;
 
     private String address;
 
@@ -85,23 +85,12 @@ public class ClientCommunicator {
 
         setAddress(selectedAccount);
 
-        initBroker();
+        loadBroker();
+        loadFishBase();
     }
 
-    public void initBroker() {
-//        try {
-//            credentials = WalletUtils.loadCredentials("test", "./test/ethereum/keystore/UTC--2018-05-23T13-34-07.274467000Z--6b39fa36eac4acc31f4f89c0b7c71eb3f75beddd");
-////            credentials = WalletUtils.loadCredentials("test", "./test/ethereum/keystore/UTC--2018-05-23T13-36-51.878844000Z--2eee044a1c214e04347fe9ebe4bf591a5c2e6624");
-////            credentials = WalletUtils.loadCredentials("test", "./test/ethereum/keystore/UTC--2018-05-23T13-36-56.110655700Z--969d5551790cad57e9dae845e5b4a00255a2a04c");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (CipherException e) {
-//            e.printStackTrace();
-//        }
-
-//        broker = Broker.load(BROKER_ADDRESS, web3, credentials, GAS_PRICE, BigInteger.valueOf(2100000L));
-//        TransactionManager fastRawTransactionManager = new FastRawTransactionManager(web3, credentials, (byte) 55);
-        TransactionManager transactionManager = new ClientTransactionManager(web3, address, 600, POLLING_INTERVAL);
+    public void loadBroker() {
+        TransactionManager transactionManager = new ClientTransactionManager(web3, address, POLLING_ATTEMPTS, POLLING_INTERVAL);
         broker = Broker.load(BROKER_ADDRESS, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
 
         try {
@@ -112,20 +101,20 @@ public class ClientCommunicator {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        LOGGER.info("READY");
+    }
 
-//        try {
-//            broker.handoffFish("0", BigInteger.ONE, BigInteger.ONE, BigInteger.ONE).sendAsync();
-////            Thread.sleep(100);
-//            System.out.println(
-//                    web3.ethGetTransactionCount("0x6b39fa36eac4acc31f4f89c0b7c71eb3f75beddd", DefaultBlockParameterName.PENDING).send().getTransactionCount());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//
-//        System.exit(1);
+    public void loadFishBase() {
+        TransactionManager transactionManager = new ClientTransactionManager(web3, address, POLLING_ATTEMPTS, POLLING_INTERVAL);
+        fishBase = FishBase.load(FISH_BASE_ADDRESS, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
+
+        try {
+            if (!fishBase.isValid()) {
+                LOGGER.info("FishBase invalid - Exit");
+                System.exit(1);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static String addressToTopic(String address) {
@@ -158,15 +147,13 @@ public class ClientCommunicator {
     public class ClientForwarder {
 
         private ClientForwarder() {
-            // TODO: Implement
+
         }
 
         public void register() {
             LOGGER.info("Register...");
             try {
-                TransactionReceipt transactionReceipt = broker.register().send();
-//                Broker.RegisterEventResponse event = broker.getRegisterEvents(transactionReceipt).get(0);
-//                tankModel.onRegistration("Tank" + event.id);
+                broker.register().send();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -182,17 +169,40 @@ public class ClientCommunicator {
         }
 
         public void handOff(FishModel fish) {
-            LOGGER.info("Handoff " + fish.getId());
+            LOGGER.info("Handoff " + fish.getTokenId());
+
+            broker.handoffFish(
+                    fish.getTokenId(), BigInteger.valueOf(fish.getY()),
+                    BigInteger.valueOf(fish.getDirection().getVector())).sendAsync()
+                    .thenAccept(transactionReceipt -> {
+                        System.out.println("Fish sent: " + fish.getTokenId());
+            });
+        }
+
+        public void summon(long tokenId) {
+            LOGGER.info("Summon fish" + tokenId);
+
+            broker.summonFish(BigInteger.valueOf(tokenId)).sendAsync();
+        }
+
+        public FishToken getFishToken(BigInteger tokenId) {
+            LOGGER.info("Fish info " + tokenId);
+
+            Tuple2<String, BigInteger> tokenTuple = null;
+            String ownerAddress;
+            BigInteger ownerTankId = null;
+
             try {
-                broker.handoffFish(
-                        fish.getTokenId(), BigInteger.valueOf(fish.getY()),
-                        BigInteger.valueOf(fish.getDirection().getVector())).sendAsync()
-                        .thenAccept(transactionReceipt -> {
-                            System.out.println("Fish sent: " + fish.getId());
-                });
+
+                tokenTuple = fishBase.getFishToken(tokenId).send();
+                ownerAddress = fishBase.ownerOf(tokenId).send();
+                ownerTankId = broker.clients(ownerAddress).send().getValue1();
+
             } catch (Exception e) {
                 e.printStackTrace();
             }
+
+            return new FishToken(tokenId, tokenTuple.getValue1(), tokenTuple.getValue2().intValue(), ownerTankId);
         }
 
     }
@@ -215,6 +225,11 @@ public class ClientCommunicator {
                     .addSingleTopic(EventEncoder.encode(Broker.HANDOFFFISH_EVENT))
                     .addSingleTopic(addressToTopic(address));
 
+            EthFilter summonFishFilter = new EthFilter(DefaultBlockParameterName.LATEST,
+                    DefaultBlockParameterName.LATEST, broker.getContractAddress())
+                    .addSingleTopic(EventEncoder.encode(Broker.SUMMONFISH_EVENT))
+                    .addSingleTopic(addressToTopic(address));
+
 
 
             broker.registerEventObservable(registerFilter).subscribe(event -> {
@@ -223,57 +238,37 @@ public class ClientCommunicator {
                         event.recipient, event.tankId));
 
                 tankModel.onRegistration("Tank" + event.tankId);
-
-                // only needed without an address-topic filter
-//                if (event.recipient.equals(ADDRESS)) {
-//                    tankModel.onRegistration("Tank" + event.id);
-//                }
             });
 
-            // TODO: handoff (auch) nur empfangen, wenn TankID übereinstimmt? Nach TankID filtern, Adresse weglassen?
             broker.handoffFishEventObservable(handoffFishFilter).subscribe(event -> {
                 LOGGER.info("--- New Handoff Event ---");
-                LOGGER.info(String.format("Recipient: %s%nTokenID: %s%nFishName: %s%nOwnerTankID: %s%nY: %s%nDirection: %s%n",
-                        event.recipient, event.tokenId, event.fishName, event.ownerTankId, event.direction));
+                LOGGER.info(String.format("Recipient: %s%nTokenID: %s%nY: %s%nDirection: %s%n",
+                        event.recipient, event.tokenId, event.y.intValue(), event.direction));
 
-                Direction direction = Direction.toDirection(event.direction.intValue());
-                FishModel fish = new FishModel(event.tokenId, event.fishName, event.ownerTankId.intValue(), event.y.intValue(), direction);
+                int y = event.y.intValue();
+                Direction direction =  Direction.toDirection(event.direction.intValue());
+
+                FishToken fishToken = forwarder.getFishToken(event.tokenId);
+
+                FishModel fish = new FishModel(fishToken, 0, y, direction);
                 tankModel.receiveFish(fish);
-
-                // only needed without an address-topic filter
-//                if (event.recipient.equals(ADDRESS)) {
-//                    Direction direction = Direction.toDirection(event.direction.intValue());
-//                    FishModel fish = new FishModel(event.id, event.x.intValue(), event.y.intValue(), direction);
-//                    tankModel.receiveFish(fish);
-//                }
             });
 
-//            web3.ethLogObservable(filter).subscribe(log -> {
-//                System.out.println(log);
-//                System.out.println(log.getData());
+            broker.summonFishEventObservable(summonFishFilter).subscribe(event -> {
+                LOGGER.info("--- New Summon Event ---");
+                LOGGER.info(String.format("Recipient: %s%nTokenID: %s%n",
+                        event.recipient, event.tokenId));
 
+                // set random values for y and direction
+                Random random = new Random();
+                int y = random.nextInt(TankModel.HEIGHT + 1);
+                Direction direction =  random.nextInt(2) == 0 ? Direction.RIGHT : Direction.LEFT;
 
+                FishToken fishToken = forwarder.getFishToken(event.tokenId);
 
-//                LOGGER.info("--- New Register Event ---");
-//                LOGGER.info(String.format("Recipient: %s%nID: %s%n",
-//                        event.recipient, event.id));
-//
-//                if (event.recipient.equals(ADDRESS)) {
-//                    tankModel.onRegistration("Tank" + event.id);
-//                }
-//            });
-
-//            web3.ethLogObservable(filter).subscribe(log -> {
-//                LOGGER.info("--- New Handoff Event ---");
-//                LOGGER.info(String.format("Recipient: %s%nFishID: %s%nX: %s%nY: %s%nDirection: %s%n",
-//                        event.recipient, event.id, event.x, event.y, event.direction));
-//
-//                if (event.recipient.equals(ADDRESS)) {
-//                    Direction direction = Direction.toDirection(event.direction.intValue());
-//                    FishModel fish = new FishModel(event.id, event.x.intValue(), event.y.intValue(), direction);
-//                    tankModel.receiveFish(fish);
-//                }
-//            });
+                FishModel fish = new FishModel(fishToken, 0, y, direction);
+                tankModel.receiveFish(fish);
+            });
 
             LOGGER.info("Subscribed to events");
         }

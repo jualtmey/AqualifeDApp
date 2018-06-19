@@ -1,17 +1,21 @@
 package client;
 
+import client.contracts.Broker;
+import client.contracts.FishBase;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.ClientTransactionManager;
+import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
 
 import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class DeploySmartContract {
+
+    public static final int POLLING_INTERVAL = 2000; // millis
 
     public static void main(String[] args) {
         deployOnGeth();
@@ -27,25 +31,27 @@ public class DeploySmartContract {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        TransactionManager transactionManager = new ClientTransactionManager(web3, address);
 
-        Broker contract;
+        TransactionManager transactionManager = new ClientTransactionManager(web3, address, 600, POLLING_INTERVAL);
+
+        Broker broker;
+        FishBase fishBase;
+
         try {
-            contract = Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L)).send();
+
+            broker = Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
+            fishBase = FishBase.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
+
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
 
-        System.out.println("Address of contract: " + contract.getContractAddress());
+        System.out.println("Address of Broker: " + broker.getContractAddress());
+        System.out.println("Address of FishBase: " + fishBase.getContractAddress());
 
         try {
-            System.out.println(contract.register().send().getLogs());
-
-            System.out.println(contract.fishBase().send());
-
-
-            contract.createFish("hallo", BigInteger.valueOf(1000000000000000000L)).send();
+            broker.setFishBase(fishBase.getContractAddress()).send();
         } catch (Exception e) {
             e.printStackTrace();
         }
