@@ -7,7 +7,7 @@ import json
 
 NAME_SMART_CONTRACT = "Broker"
 
-PATH_SMART_CONTRACT_SRC = "./src/broker/"
+PATH_SMART_CONTRACT_SRC = "./src/ethereum/"
 PATH_SMART_CONTRACT_OUT = "./contract/"
 PATH_GETH_DATADIR = "./test/ethereum/"
 PATH_ACCOUNT_PASSWD = "./test/passwd.txt"

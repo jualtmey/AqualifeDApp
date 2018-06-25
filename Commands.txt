@@ -4,6 +4,6 @@ geth --testnet --syncmode "light" --rpc --rpccorsdomain "https://remix.ethereum.
 geth account new --datadir ./test/ethereum
 geth removedb --datadir ./test/ethereum
 
-solc ./src/broker/Broker.sol --bin --abi --optimize --overwrite -o ./out/contract
+solc ./src/ethereum/Broker.sol --bin --abi --optimize --overwrite -o ./out/contract
 
 web3j solidity generate ./out/contract/Broker.bin ./out/contract/Broker.abi -o ./src/ -p client
