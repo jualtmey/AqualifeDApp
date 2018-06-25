@@ -10,34 +10,34 @@ public final class FishModel implements Serializable {
 	private final static int ySize = 50;
 	private final static Random rand = new Random();
 
-	private final FishToken fishToken;
+	private final FishInfo fishInfo;
 	private int x;
 	private int y;
 	private Direction direction;
 
 	private boolean toggled;
 
-	public FishModel(FishToken fishToken, int x, int y, Direction direction) {
-		this.fishToken = fishToken;
+	public FishModel(FishInfo fishInfo, int x, int y, Direction direction) {
+		this.fishInfo = fishInfo;
 		this.x = x;
 		this.y = y;
 		this.direction = direction;
 	}
 
 	public BigInteger getTokenId() {
-		return fishToken.getTokenId();
+		return fishInfo.getTokenId();
 	}
 
-	public FishToken getFishToken() {
-		return fishToken;
+	public FishInfo getFishInfo() {
+		return fishInfo;
 	}
 
 	public String getId() {
-		return "[" + fishToken.getTokenId() + "]" + fishToken.getName() + "@Tank" + fishToken.getOwnerTankId();
+		return "[" + fishInfo.getTokenId() + "]" + fishInfo.getName() + "@Tank" + fishInfo.getOwnerTankId();
 	}
 
 	public String getTankId() {
-		return "Tank" + fishToken.getOwnerTankId().intValue();
+		return "Tank" + fishInfo.getOwnerTankId().intValue();
 	}
 
 	public int getX() {

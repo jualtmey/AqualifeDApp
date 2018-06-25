@@ -2,14 +2,14 @@ package client;
 
 import java.math.BigInteger;
 
-public class FishToken {
+public class FishInfo {
 
     private BigInteger tokenId;
     private String name;
     private int uniqueData;
     private BigInteger ownerTankId;
 
-    public FishToken(BigInteger tokenId, String name, int uniqueData, BigInteger ownerTankId) {
+    public FishInfo(BigInteger tokenId, String name, int uniqueData, BigInteger ownerTankId) {
         this.tokenId = tokenId;
         this.name = name;
         this.uniqueData = uniqueData;

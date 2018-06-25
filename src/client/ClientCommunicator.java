@@ -7,7 +7,6 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tuples.generated.Tuple2;
@@ -185,7 +184,7 @@ public class ClientCommunicator {
             broker.summonFish(BigInteger.valueOf(tokenId)).sendAsync();
         }
 
-        public FishToken getFishToken(BigInteger tokenId) {
+        public FishInfo getFishToken(BigInteger tokenId) {
             LOGGER.info("Fish info " + tokenId);
 
             Tuple2<String, BigInteger> tokenTuple = null;
@@ -202,7 +201,7 @@ public class ClientCommunicator {
                 e.printStackTrace();
             }
 
-            return new FishToken(tokenId, tokenTuple.getValue1(), tokenTuple.getValue2().intValue(), ownerTankId);
+            return new FishInfo(tokenId, tokenTuple.getValue1(), tokenTuple.getValue2().intValue(), ownerTankId);
         }
 
     }
@@ -248,9 +247,9 @@ public class ClientCommunicator {
                 int y = event.y.intValue();
                 Direction direction =  Direction.toDirection(event.direction.intValue());
 
-                FishToken fishToken = forwarder.getFishToken(event.tokenId);
+                FishInfo fishInfo = forwarder.getFishToken(event.tokenId);
 
-                FishModel fish = new FishModel(fishToken, 0, y, direction);
+                FishModel fish = new FishModel(fishInfo, 0, y, direction);
                 tankModel.receiveFish(fish);
             });
 
@@ -264,9 +263,9 @@ public class ClientCommunicator {
                 int y = random.nextInt(TankModel.HEIGHT + 1);
                 Direction direction =  random.nextInt(2) == 0 ? Direction.RIGHT : Direction.LEFT;
 
-                FishToken fishToken = forwarder.getFishToken(event.tokenId);
+                FishInfo fishInfo = forwarder.getFishToken(event.tokenId);
 
-                FishModel fish = new FishModel(fishToken, 0, y, direction);
+                FishModel fish = new FishModel(fishInfo, 0, y, direction);
                 tankModel.receiveFish(fish);
             });
 

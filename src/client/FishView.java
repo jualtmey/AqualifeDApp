@@ -35,7 +35,7 @@ public class FishView {
 
 		Image fishImage = fishModel.getDirection() == Direction.LEFT ? imgGreyLeft : imgGreyRight;
 
-		int uniqueData = fishModel.getFishToken().getUniqueData();
+		int uniqueData = fishModel.getFishInfo().getUniqueData();
 		int last8BitMask = 0x000000FF;
 
 		int r = uniqueData & last8BitMask;
