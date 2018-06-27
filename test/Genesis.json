@@ -1,9 +1,10 @@
 {
     "config": {
-        "eip155Block": 0,
         "chainId": 55,
+        "eip155Block": 0,
         "eip158Block": 0,
-        "homesteadBlock": 0
+        "homesteadBlock": 0,
+        "byzantiumBlock": 0
     },
     "gasLimit": "8000000",
     "difficulty": "10",
