@@ -26,7 +26,7 @@ public class Aqualife {
 
         SwingUtilities.invokeLater(new AquaGui(aqualifeController, communicator));
 
-        aqualifeController.run();
+        aqualifeController.start();
     }
 
     public static String showAccountAddressSelection(String[] accounts) {

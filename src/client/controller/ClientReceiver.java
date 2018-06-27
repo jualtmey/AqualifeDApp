@@ -8,7 +8,6 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
 
-import javax.swing.*;
 import java.util.logging.Logger;
 
 public class ClientReceiver {
@@ -63,7 +62,7 @@ public class ClientReceiver {
             LOGGER.info(String.format("Recipient: %s%nID: %s%n",
                     event.recipient, event.tankId));
 
-            aqualifeController.processRegisterEvent(event.tankId);
+            aqualifeController.onRegistration(event.tankId);
         });
 
         broker.handoffFishEventObservable(handoffFishFilter).subscribe(event -> {
@@ -92,11 +91,11 @@ public class ClientReceiver {
             LOGGER.info(String.format("From: %s%nTo: %s%nTokenID: %s%n",
                     event.from, event.to, event.tokenId));
 
-            JOptionPane.showMessageDialog(null, "You own a new FishToken: " + event.tokenId);
+
         });
 
 
-//        web3.blockObservable(false).subscribe(block -> aqualifeController.newBlock());
+        web3.blockObservable(false).subscribe(block -> aqualifeController.onNewBlock());
 
         LOGGER.info("Subscribed to events");
     }

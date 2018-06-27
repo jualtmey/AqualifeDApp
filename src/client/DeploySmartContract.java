@@ -56,6 +56,7 @@ public class DeploySmartContract {
 
         try {
             broker.setFishBase(fishBase.getContractAddress()).send();
+            fishBase.setCreateFishAuthorized(marketplace.getContractAddress());
             marketplace.setBroker(broker.getContractAddress()).send();
             marketplace.setFishBase(fishBase.getContractAddress()).send();
         } catch (Exception e) {

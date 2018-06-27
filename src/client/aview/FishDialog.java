@@ -1,10 +1,12 @@
 package client.aview;
 
+import client.Util;
 import client.controller.AqualifeController;
 import client.model.FishInfo;
 
 import javax.swing.*;
 import java.awt.*;
+import java.math.BigInteger;
 import java.util.List;
 
 public class FishDialog extends JDialog {
@@ -35,7 +37,6 @@ public class FishDialog extends JDialog {
         setTitle("Fish Menu");
         pack();
         setLocationRelativeTo(parent);
-        setVisible(true);
     }
 
     private void fillListModel(DefaultListModel<FishInfo> listModel, List<FishInfo> list) {
@@ -58,9 +59,6 @@ public class FishDialog extends JDialog {
             setBorder(BorderFactory.createTitledBorder("Owned Fish Token"));
 
             ownedFishTokenList = new DefaultListModel<>();
-//            ownedFishTokenList.addElement(new FishInfo(BigInteger.valueOf(57), "hallo", 2, BigInteger.valueOf(3)));
-//            ownedFishTokenList.addElement(new FishInfo(BigInteger.valueOf(1275), "bl", 2, BigInteger.valueOf(150)));
-//            ownedFishTokenList.addElement(new FishInfo(BigInteger.valueOf(7), "böadfaenn", 2, BigInteger.valueOf(10)));
 
             JList topList = new JList(ownedFishTokenList);
             topList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -133,9 +131,10 @@ public class FishDialog extends JDialog {
 
             JButton buyNewButton = new JButton("Buy New");
             buyNewButton.addActionListener(e -> {
-                int price = 1; // TODO: read correct value
+                BigInteger price = aqualifeController.getNewFishPrice();
                 String name = JOptionPane.showInputDialog(
-                        "The creation of a new FishToken costs " + price + " Ether.\nSet name of fish:");
+                        "The creation of a new FishToken costs " + Util.convertWeiToEther(price) + " Ether.\n" +
+                                "Set name of fish:");
                 if (name != null) {
                     aqualifeController.buyNewFish(name);
                 }

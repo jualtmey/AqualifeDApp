@@ -2,82 +2,100 @@ package client.aview;
 
 import client.controller.AqualifeController;
 import client.controller.ClientCommunicator;
+import client.model.Event;
 import client.model.TankModel;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.math.BigDecimal;
 import java.util.*;
-import java.util.List;
 
 @SuppressWarnings("serial")
 public class AquaGui extends JFrame implements Runnable, Observer {
-	private final List<JMenuItem> fishMenuItems = Collections
-			.synchronizedList(new ArrayList<JMenuItem>());
+    private final List<JMenuItem> fishMenuItems = Collections
+            .synchronizedList(new ArrayList<JMenuItem>());
 
-//	private final JMenu searchMenu;
-	private final Runnable updateRunnable;
+    private AqualifeController aqualifeController;
+    private ClientCommunicator communicator;
+    private TankModel tankModel;
 
-	private AqualifeController aqualifeController;
-	private TankModel tankModel;
+    private FishDialog fishDialog;
+    private JLabel balanceLabel;
 
-	public AquaGui(final AqualifeController aqualifeController, ClientCommunicator communicator) {
-		this.aqualifeController = aqualifeController;
-		this.tankModel = aqualifeController.getTankModel();
+    public AquaGui(final AqualifeController aqualifeController, ClientCommunicator communicator) {
+        this.aqualifeController = aqualifeController;
+        this.communicator = communicator;
+        this.tankModel = aqualifeController.getTankModel();
 
-		TankView tankView = new TankView(tankModel);
-		tankModel.addObserver(tankView);
-		add(tankView);
+        TankView tankView = new TankView(tankModel);
+        tankModel.addObserver(tankView);
+        add(tankView);
 
-		pack();
+        fishDialog = new FishDialog(this, aqualifeController);
 
-		setLocationRelativeTo(null);
-		setResizable(false);
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        pack();
 
-		addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent e) {
-				tankModel.finish();
-				System.exit(0);
-			}
-		});
+        setLocationRelativeTo(null);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-		JMenuBar menuBar = new JMenuBar();
-		setJMenuBar(menuBar);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosed(WindowEvent e) {
+                tankModel.finish();
+                System.exit(0);
+            }
+        });
 
-		JMenu toolsMenu = new JMenu("Tools");
-		menuBar.add(toolsMenu);
+        JMenuBar menuBar = new JMenuBar();
+        setJMenuBar(menuBar);
 
-		JMenuItem fishMenuItem = new JMenuItem("Fish Menu");
-		toolsMenu.add(fishMenuItem);
+        JMenu toolsMenu = new JMenu("Tools");
+        menuBar.add(toolsMenu);
 
-		fishMenuItem.addActionListener(e -> new FishDialog(this, aqualifeController));
+        JMenuItem fishMenuItem = new JMenuItem("Fish Menu");
+        fishMenuItem.addActionListener(e -> fishDialog.setVisible(true));
+        toolsMenu.add(fishMenuItem);
 
-//		searchMenu = new JMenu("Toggle Fish Color...");
-//		toolsMenu.add(searchMenu);
-//		tankModel.addObserver(this);
+        balanceLabel = new JLabel("ETH: ");
+        refreshBalance();
 
-		menuBar.add(new JSeparator(SwingConstants.VERTICAL));
-		menuBar.add(new JLabel("ADDR: " + communicator.getAccountAddress() + " | ETH: " + communicator.getBalanceInEther() + " "));
+        menuBar.add(new JSeparator(SwingConstants.VERTICAL));
+        menuBar.add(new JLabel("ADDR: " + communicator.getAccountAddress() + " | "));
+        menuBar.add(balanceLabel);
 
-		tankModel.addObserver(this);
+        tankModel.addObserver(this);
+        aqualifeController.addObserver(this);
 
-		updateRunnable = new Runnable() {
-			@Override
-			public void run() {
-				setTitle(tankModel.getId());
-			}
-		};
-	}
+        setTitle("Not registered");
+    }
 
-	@Override
-	public void run() {
-		setVisible(true);
-	}
+    private void refreshBalance() {
+        balanceLabel.setText("ETH: " + communicator.getBalanceInEther() + " ");
+    }
 
-	@Override
-	public void update(Observable o, Object arg) {
-		SwingUtilities.invokeLater(updateRunnable);
-	}
+    @Override
+    public void run() {
+        setVisible(true);
+    }
+
+    @Override
+    public void update(Observable o, Object arg) {
+		if (o instanceof AqualifeController && arg != null && arg instanceof Event) {
+            Event event = (Event) arg;
+            switch (event) {
+                case REGISTRATION:
+                    setTitle(tankModel.getId());
+                    break;
+//                case TRANSFER:
+//                    JOptionPane.showMessageDialog(this, "You own a new FishToken: " + event.tokenId);
+                case NEW_BLOCK:
+                    refreshBalance();
+                    fishDialog.fillOwnedFishTokenList();
+                    fishDialog.fillForSaleFishTokenList();
+                    break;
+            }
+        }
+    }
 
 }

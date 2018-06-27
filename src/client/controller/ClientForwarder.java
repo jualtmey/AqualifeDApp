@@ -7,6 +7,7 @@ import client.model.FishInfo;
 import client.model.FishModel;
 import org.web3j.tuples.generated.Tuple2;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.logging.Logger;
@@ -62,12 +63,20 @@ public class ClientForwarder {
         broker.summonFish(tokenId).sendAsync();
     }
 
+    public void approveMarketplaceForAll() {
+        try {
+            fishBase.isApprovedForAll(clientCommunicator.getAccountAddress(), marketplace.getContractAddress()).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void offer(BigInteger tokenId, BigInteger price) {
         marketplace.offerFish(tokenId, price).sendAsync();
     }
 
     public void buyNewFish(String name) {
-        marketplace.buyNewFish(name, getNewTokenPrice()).sendAsync();
+        marketplace.buyNewFish(name, getNewFishPrice()).sendAsync();
     }
 
     public void buyFish(BigInteger tokenId, BigInteger price) {
@@ -116,7 +125,16 @@ public class ClientForwarder {
         return null;
     }
 
-    public BigInteger getNewTokenPrice() {
+    public boolean isMarketplaceApprovedForAll() {
+        try {
+            return fishBase.isApprovedForAll(clientCommunicator.getAccountAddress(), marketplace.getContractAddress()).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public BigInteger getNewFishPrice() {
         try {
             return marketplace.newFishPrice().send();
         } catch (Exception e) {

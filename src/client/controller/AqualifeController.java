@@ -1,19 +1,13 @@
 package client.controller;
 
 import client.Util;
-import client.model.Direction;
-import client.model.FishInfo;
-import client.model.FishModel;
-import client.model.TankModel;
+import client.model.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
-public class AqualifeController {
+public class AqualifeController extends Observable {
 
     private TankModel tankModel;
 
@@ -31,7 +25,11 @@ public class AqualifeController {
         tankModel = new TankModel(clientForwarder);
     }
 
-    public void run() {
+    public void start() {
+        clientForwarder.register();
+        if (!clientForwarder.isMarketplaceApprovedForAll()) {
+            clientForwarder.approveMarketplaceForAll();
+        }
         tankModel.run();
     }
 
@@ -51,10 +49,6 @@ public class AqualifeController {
         clientForwarder.summon(tokenId);
     }
 
-    public void processRegisterEvent(BigInteger tankId) {
-        tankModel.onRegistration("Tank" + tankId);
-    }
-
     public void receiveFish(BigInteger tokenId, int y, Direction direction) {
         FishInfo fishInfo = clientForwarder.getFishInfo(tokenId);
         tankModel.receiveFish(new FishModel(fishInfo, 0, y, direction));
@@ -63,9 +57,20 @@ public class AqualifeController {
     public void receiveFishRandom(BigInteger tokenId) {
         Random random = new Random();
         int y = random.nextInt(TankModel.HEIGHT + 1);
-        Direction direction =  random.nextInt(2) == 0 ? Direction.RIGHT : Direction.LEFT;
+        Direction direction = random.nextInt(2) == 0 ? Direction.RIGHT : Direction.LEFT;
 
         receiveFish(tokenId, y, direction);
+    }
+
+    public void onRegistration(BigInteger tankId) {
+        tankModel.onRegistration("Tank" + tankId);
+        setChanged();
+        notifyObservers(Event.REGISTRATION);
+    }
+
+    public void onNewBlock() {
+        setChanged();
+        notifyObservers(Event.NEW_BLOCK);
     }
 
     public List<FishInfo> getFishInfoOfOwnedFishToken() {
@@ -86,6 +91,10 @@ public class AqualifeController {
         fishInfo.sort(Comparator.comparing(FishInfo::getTokenId));
 
         return fishInfo;
+    }
+
+    public BigInteger getNewFishPrice() {
+        return clientForwarder.getNewFishPrice();
     }
 
     public TankModel getTankModel() {
