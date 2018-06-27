@@ -4,9 +4,9 @@ pragma solidity ^0.4.24;
 /// @dev See https://github.com/ethereum/EIPs/blob/master/EIPS/eip-721.md
 interface ERC721 /* is ERC165 */ {
 
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
-    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
-    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
     function balanceOf(address _owner) external view returns (uint256);
 

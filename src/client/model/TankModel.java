@@ -1,4 +1,6 @@
-package client;
+package client.model;
+
+import client.controller.ClientForwarder;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,14 +15,14 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 	protected volatile String id;
 	protected final Set<FishModel> fishies;
 	protected int fishCounter = 0;
-	protected final ClientCommunicator.ClientForwarder forwarder;
+	protected final ClientForwarder forwarder;
 
-	public TankModel(ClientCommunicator.ClientForwarder forwarder) {
+	public TankModel(ClientForwarder forwarder) {
 		this.fishies = Collections.newSetFromMap(new ConcurrentHashMap<FishModel, Boolean>());
 		this.forwarder = forwarder;
 	}
 
-	synchronized void onRegistration(String id) {
+	public synchronized void onRegistration(String id) {
 		this.id = id;
 //		newFish(WIDTH - FishModel.getXSize(), rand.nextInt(HEIGHT - FishModel.getYSize()));
 //		newFish(WIDTH - FishModel.getXSize(), rand.nextInt(HEIGHT - FishModel.getYSize()));
@@ -42,7 +44,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 //		}
 //	}
 
-	synchronized void receiveFish(FishModel fish) {
+	public synchronized void receiveFish(FishModel fish) {
 		fish.setToStart();
 		fishies.add(fish);
 	}
@@ -79,7 +81,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 		notifyObservers();
 	}
 
-	protected void run() {
+	public void run() {
 		forwarder.register();
 
 		try {

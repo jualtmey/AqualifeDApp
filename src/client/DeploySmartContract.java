@@ -2,6 +2,7 @@ package client;
 
 import client.contracts.Broker;
 import client.contracts.FishBase;
+import client.contracts.Marketplace;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.ClientTransactionManager;
@@ -36,11 +37,13 @@ public class DeploySmartContract {
 
         Broker broker;
         FishBase fishBase;
+        Marketplace marketplace;
 
         try {
 
             broker = Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
             fishBase = FishBase.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
+            marketplace = Marketplace.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -49,9 +52,12 @@ public class DeploySmartContract {
 
         System.out.println("Address of Broker: " + broker.getContractAddress());
         System.out.println("Address of FishBase: " + fishBase.getContractAddress());
+        System.out.println("Address of Marketplace: " + marketplace.getContractAddress());
 
         try {
             broker.setFishBase(fishBase.getContractAddress()).send();
+            marketplace.setBroker(broker.getContractAddress()).send();
+            marketplace.setFishBase(fishBase.getContractAddress()).send();
         } catch (Exception e) {
             e.printStackTrace();
         }

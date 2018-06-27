@@ -1,4 +1,7 @@
-package client;
+package client.aview;
+
+import client.model.Direction;
+import client.model.FishModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,11 +24,11 @@ public class FishView {
 			FishView.class.getResource("/client/resources/piranha-red-right.png")).getImage()
 					.getScaledInstance(FishModel.getXSize(), -1, Image.SCALE_SMOOTH);
 
-	private static Image imgGreyLeft = new ImageIcon(
+	private static final Image imgGreyLeft = new ImageIcon(
 			FishView.class.getResource("/client/resources/piranha-grey-left.png")).getImage()
 			.getScaledInstance(FishModel.getXSize(), -1, Image.SCALE_SMOOTH);
 
-	private static Image imgGreyRight = new ImageIcon(
+	private static final Image imgGreyRight = new ImageIcon(
 			FishView.class.getResource("/client/resources/piranha-grey-right.png")).getImage()
 			.getScaledInstance(FishModel.getXSize(), -1, Image.SCALE_SMOOTH);
 

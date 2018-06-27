@@ -1,7 +1,10 @@
-package client;
+package client.aview;
+
+import client.controller.AqualifeController;
+import client.controller.ClientCommunicator;
+import client.model.TankModel;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.*;
@@ -12,10 +15,16 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 	private final List<JMenuItem> fishMenuItems = Collections
 			.synchronizedList(new ArrayList<JMenuItem>());
 
-	private final JMenu searchMenu;
+//	private final JMenu searchMenu;
 	private final Runnable updateRunnable;
 
-	public AquaGui(final TankModel tankModel, ClientCommunicator communicator) {
+	private AqualifeController aqualifeController;
+	private TankModel tankModel;
+
+	public AquaGui(final AqualifeController aqualifeController, ClientCommunicator communicator) {
+		this.aqualifeController = aqualifeController;
+		this.tankModel = aqualifeController.getTankModel();
+
 		TankView tankView = new TankView(tankModel);
 		tankModel.addObserver(tankView);
 		add(tankView);
@@ -39,37 +48,26 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 		JMenu toolsMenu = new JMenu("Tools");
 		menuBar.add(toolsMenu);
 
-		JMenuItem gsMenuItem = new JMenuItem("Global Snapshot");
-		toolsMenu.add(gsMenuItem);
+		JMenuItem fishMenuItem = new JMenuItem("Fish Menu");
+		toolsMenu.add(fishMenuItem);
 
-		gsMenuItem.addActionListener(new NotImplementedYetController(this));
+		fishMenuItem.addActionListener(e -> new FishDialog(this, aqualifeController));
 
-		searchMenu = new JMenu("Toggle Fish Color...");
-		toolsMenu.add(searchMenu);
-		tankModel.addObserver(this);
+//		searchMenu = new JMenu("Toggle Fish Color...");
+//		toolsMenu.add(searchMenu);
+//		tankModel.addObserver(this);
 
 		menuBar.add(new JSeparator(SwingConstants.VERTICAL));
-		menuBar.add(new JLabel("Address: " + communicator.getAddress() + " "));
+		menuBar.add(new JLabel("ADDR: " + communicator.getAccountAddress() + " | ETH: " + communicator.getBalanceInEther() + " "));
+
+		tankModel.addObserver(this);
 
 		updateRunnable = new Runnable() {
 			@Override
 			public void run() {
 				setTitle(tankModel.getId());
-
-				int size = fishMenuItems.size();
-				while (tankModel.getFishCounter() > size) {
-					String fishId = "fish" + (++size) + "@" + tankModel.getId();
-					JMenuItem fishMenuItem = new JMenuItem(fishId);
-					fishMenuItem.addActionListener(new NotImplementedYetController(AquaGui.this));
-					fishMenuItems.add(fishMenuItem);
-					searchMenu.add(fishMenuItem);
-				}
 			}
 		};
-	}
-
-	public void showAccountSelectionDialog(String[] accounts) {
-
 	}
 
 	@Override

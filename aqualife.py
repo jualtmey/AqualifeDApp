@@ -5,8 +5,6 @@ import subprocess
 import json
 
 
-NAME_SMART_CONTRACT = "Broker"
-
 PATH_SMART_CONTRACT_SRC = "./src/ethereum/"
 PATH_SMART_CONTRACT_OUT = "./contract/"
 PATH_GETH_DATADIR = "./test/ethereum/"
@@ -59,14 +57,16 @@ def init():
 
 
 def compile_contract():
-    print("Compile smart contract...")
+    print("Compile smart contracts...")
 
     if not os.path.exists(PATH_SMART_CONTRACT_OUT):
         print("Create contract output folder '" + PATH_SMART_CONTRACT_OUT + "'...")
         os.makedirs(PATH_SMART_CONTRACT_OUT)
 
-    path_contract_src = PATH_SMART_CONTRACT_SRC + NAME_SMART_CONTRACT + ".sol"
-    os.system("solc " + path_contract_src + " --bin --abi --optimize --overwrite -o " + PATH_SMART_CONTRACT_OUT)
+    files = os.listdir(PATH_SMART_CONTRACT_SRC)
+    for file in files:
+        path_contract_src = PATH_SMART_CONTRACT_SRC + file
+        os.system("solc " + path_contract_src + " --bin --abi --optimize --gas --overwrite -o " + PATH_SMART_CONTRACT_OUT)
 
 
 def generate_web3j_wrapper():

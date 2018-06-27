@@ -47,22 +47,18 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
 
     // === FUNCTIONS ===
 
-    function mintToken(address _owner, string _name) external onlyAuthorized returns (uint256) {
-        FishToken memory fish = FishToken(_name, generateUniqueData());
+    function mintToken(address _owner, string _name) external onlyAuthorized {
+        FishToken memory fish = FishToken(_name, generateUniqueData(_name));
 
         uint256 newFishId = fishies.push(fish) - 1;
 
         transfer(0, _owner, newFishId);
-
-        return newFishId;
     }
 
-    function generateUniqueData() private returns (uint32) {
-        // random is not simple to implement
-        // TODO: what if more than one fish are generated in same block?
-        // Do they have the same data?
-        // TODO: use fish name for random
-        return uint32(blockhash(block.number - 1)); // converts last 4 bytes of hash to uint32
+    function generateUniqueData(string _name) private view returns (uint32) {
+        // generate random data by hashing 'previous blockhash', 'fishName' and 'current number of FishToken'
+        // and convert last 4 bytes of this hash to uint32
+        return uint32(keccak256(abi.encodePacked(blockhash(block.number - 1), _name, fishies.length)));
     }
 
     function changeFishName(uint256 _tokenId, string _name) external {

@@ -160,9 +160,9 @@ public class ERC721 extends Contract {
         for (Contract.EventValuesWithLog eventValues : valueList) {
             TransferEventResponse typedResponse = new TransferEventResponse();
             typedResponse.log = eventValues.getLog();
-            typedResponse._from = (String) eventValues.getIndexedValues().get(0).getValue();
-            typedResponse._to = (String) eventValues.getIndexedValues().get(1).getValue();
-            typedResponse._tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
+            typedResponse.from = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.to = (String) eventValues.getIndexedValues().get(1).getValue();
+            typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
             responses.add(typedResponse);
         }
         return responses;
@@ -175,9 +175,9 @@ public class ERC721 extends Contract {
                 Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(TRANSFER_EVENT, log);
                 TransferEventResponse typedResponse = new TransferEventResponse();
                 typedResponse.log = log;
-                typedResponse._from = (String) eventValues.getIndexedValues().get(0).getValue();
-                typedResponse._to = (String) eventValues.getIndexedValues().get(1).getValue();
-                typedResponse._tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
+                typedResponse.from = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.to = (String) eventValues.getIndexedValues().get(1).getValue();
+                typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
                 return typedResponse;
             }
         });
@@ -195,9 +195,9 @@ public class ERC721 extends Contract {
         for (Contract.EventValuesWithLog eventValues : valueList) {
             ApprovalEventResponse typedResponse = new ApprovalEventResponse();
             typedResponse.log = eventValues.getLog();
-            typedResponse._owner = (String) eventValues.getIndexedValues().get(0).getValue();
-            typedResponse._approved = (String) eventValues.getIndexedValues().get(1).getValue();
-            typedResponse._tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
+            typedResponse.owner = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.approved = (String) eventValues.getIndexedValues().get(1).getValue();
+            typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
             responses.add(typedResponse);
         }
         return responses;
@@ -210,9 +210,9 @@ public class ERC721 extends Contract {
                 Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(APPROVAL_EVENT, log);
                 ApprovalEventResponse typedResponse = new ApprovalEventResponse();
                 typedResponse.log = log;
-                typedResponse._owner = (String) eventValues.getIndexedValues().get(0).getValue();
-                typedResponse._approved = (String) eventValues.getIndexedValues().get(1).getValue();
-                typedResponse._tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
+                typedResponse.owner = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.approved = (String) eventValues.getIndexedValues().get(1).getValue();
+                typedResponse.tokenId = (BigInteger) eventValues.getIndexedValues().get(2).getValue();
                 return typedResponse;
             }
         });
@@ -230,9 +230,9 @@ public class ERC721 extends Contract {
         for (Contract.EventValuesWithLog eventValues : valueList) {
             ApprovalForAllEventResponse typedResponse = new ApprovalForAllEventResponse();
             typedResponse.log = eventValues.getLog();
-            typedResponse._owner = (String) eventValues.getIndexedValues().get(0).getValue();
-            typedResponse._operator = (String) eventValues.getIndexedValues().get(1).getValue();
-            typedResponse._approved = (Boolean) eventValues.getNonIndexedValues().get(0).getValue();
+            typedResponse.owner = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.operator = (String) eventValues.getIndexedValues().get(1).getValue();
+            typedResponse.approved = (Boolean) eventValues.getNonIndexedValues().get(0).getValue();
             responses.add(typedResponse);
         }
         return responses;
@@ -245,9 +245,9 @@ public class ERC721 extends Contract {
                 Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(APPROVALFORALL_EVENT, log);
                 ApprovalForAllEventResponse typedResponse = new ApprovalForAllEventResponse();
                 typedResponse.log = log;
-                typedResponse._owner = (String) eventValues.getIndexedValues().get(0).getValue();
-                typedResponse._operator = (String) eventValues.getIndexedValues().get(1).getValue();
-                typedResponse._approved = (Boolean) eventValues.getNonIndexedValues().get(0).getValue();
+                typedResponse.owner = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.operator = (String) eventValues.getIndexedValues().get(1).getValue();
+                typedResponse.approved = (Boolean) eventValues.getNonIndexedValues().get(0).getValue();
                 return typedResponse;
             }
         });
@@ -278,30 +278,30 @@ public class ERC721 extends Contract {
     public static class TransferEventResponse {
         public Log log;
 
-        public String _from;
+        public String from;
 
-        public String _to;
+        public String to;
 
-        public BigInteger _tokenId;
+        public BigInteger tokenId;
     }
 
     public static class ApprovalEventResponse {
         public Log log;
 
-        public String _owner;
+        public String owner;
 
-        public String _approved;
+        public String approved;
 
-        public BigInteger _tokenId;
+        public BigInteger tokenId;
     }
 
     public static class ApprovalForAllEventResponse {
         public Log log;
 
-        public String _owner;
+        public String owner;
 
-        public String _operator;
+        public String operator;
 
-        public Boolean _approved;
+        public Boolean approved;
     }
 }

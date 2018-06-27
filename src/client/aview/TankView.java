@@ -1,4 +1,7 @@
-package client;
+package client.aview;
+
+import client.model.FishModel;
+import client.model.TankModel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -45,6 +48,7 @@ public class TankView extends JPanel implements Observer {
 		Graphics2D g2d = (Graphics2D) g;
 
 		for (FishModel fishModel : tankModel) {
+			// TODO: fishView.getImage(...) calculates every time the color of the fish. Save calculated image to increase performance
 			g2d.drawImage(fishView.getImage(fishModel), fishModel.getX(), fishModel.getY(), null);
 			g2d.drawString(fishModel.getId(), fishModel.getX(), fishModel.getY());
 		}

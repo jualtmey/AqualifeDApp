@@ -8,14 +8,23 @@ contract Marketplace is Ownable {
 
     // === STRUCTS ===
 
-    struct Sale {
+    struct Offer {
         address seller;
         uint256 price;
     }
 
-    mapping (uint256 => Sale) public saleOf;
+    // === EVENTS ===
 
-    uint public newFishPrice = 0; // 1e18; // in Wei (1e18 Wei = 1 Ether)
+    event Sale(
+        address indexed seller,
+        address indexed buyer,
+        uint256 indexed tokenId,
+        uint256 price
+    );
+
+    mapping (uint256 => Offer) public saleOf;
+
+    uint public newFishPrice = 1e18; // in Wei (1e18 Wei = 1 Ether)
 
     Broker public broker;
     FishBase public fishBase;
@@ -36,9 +45,9 @@ contract Marketplace is Ownable {
     // === FUNCTIONS ===
 
     function offerFish(uint256 _tokenId, uint256 _price) external {
-        require(fishBase.ownerOf(_tokenId) == msg.sender);
+        // require(fishBase.ownerOf(_tokenId) == msg.sender);
 
-        saleOf[_tokenId] = Sale(msg.sender, _price);
+        saleOf[_tokenId] = Offer(msg.sender, _price);
     }
 
     function removeFishSell(uint256 _tokenId) public {
@@ -52,17 +61,21 @@ contract Marketplace is Ownable {
     }
 
     function buyFish(uint256 _tokenId) external payable {
-        Sale storage sale = saleOf[_tokenId];
+        Offer storage sale = saleOf[_tokenId];
 
-        require(fishBase.getApproved(_tokenId) == address(this));
+        // require(fishBase.getApproved(_tokenId) == address(this));
         require(sale.seller != address(0));
         require(msg.value >= sale.price);
-        require(broker.tokenIdToCurrentTank(_tokenId) == msg.sender);
+        // require(broker.tokenIdToCurrentTank(_tokenId) == msg.sender);
 
         fishBase.transferFrom(sale.seller, msg.sender, _tokenId);
         sale.seller.transfer(sale.price);
 
         delete saleOf[_tokenId];
+    }
+
+    function isForSale(uint256 _tokenId) external view returns (bool) {
+        return saleOf[_tokenId].seller != address(0);
     }
 
     function setBroker(address _newAddress) external onlyOwner {
