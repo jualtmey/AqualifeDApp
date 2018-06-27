@@ -29,6 +29,7 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
     mapping (uint256 => address) private tokenOwner;
     mapping (uint256 => address) private tokenApprovals;
     mapping (address => uint256) private ownershipTokenCount;
+    mapping (address => mapping (address => bool)) private operatorApprovals;
 
     FishBase public fishBase;
 
@@ -47,12 +48,14 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
 
     // === FUNCTIONS ===
 
-    function mintToken(address _owner, string _name) external onlyAuthorized {
+    function mintToken(address _owner, string _name) external onlyAuthorized returns (uint256) {
         FishToken memory fish = FishToken(_name, generateUniqueData(_name));
 
         uint256 newFishId = fishies.push(fish) - 1;
 
         transfer(0, _owner, newFishId);
+
+        return newFishId;
     }
 
     function generateUniqueData(string _name) private view returns (uint32) {
@@ -127,7 +130,7 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
 
     function transferFrom(address _from, address _to, uint256 _tokenId) external payable {
         require(tokenOwner[_tokenId] != address(0)); // tokenId exists, is valid
-        require(msg.sender == _from || msg.sender == tokenApprovals[_tokenId]); // sender is owner or approved
+        require(msg.sender == _from || msg.sender == tokenApprovals[_tokenId] || isApprovedForAll(_from, msg.sender)); // sender is owner or approved
         require(_from == tokenOwner[_tokenId]); // _from is token owner
         require(_to != address(0)); // save transfer, token can't be lost
         require(_to != address(this)); // don't transfer to this contract
@@ -143,7 +146,7 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
     function approve(address _approved, uint256 _tokenId) external payable {
         address owner = tokenOwner[_tokenId];
         require(_approved != owner);
-        require(msg.sender == owner);
+        require(msg.sender == owner || isApprovedForAll(owner, msg.sender));
 
         tokenApprovals[_tokenId] = _approved;
 
@@ -151,16 +154,17 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
     }
 
     function setApprovalForAll(address _operator, bool _approved) external {
-        revert("Not implemented.");
+        require(_operator != msg.sender);
+        operatorApprovals[msg.sender][_operator] = _approved;
+        emit ApprovalForAll(msg.sender, _operator, _approved);
     }
 
     function getApproved(uint256 _tokenId) external view returns (address) {
         return tokenApprovals[_tokenId];
     }
 
-    function isApprovedForAll(address _owner, address _operator) external view returns (bool) {
-        revert("Not implemented.");
-
+    function isApprovedForAll(address _owner, address _operator) public view returns (bool) {
+        return operatorApprovals[_owner][_operator];
     }
 
     // === ERC721Metadata FUNCTIONS ===

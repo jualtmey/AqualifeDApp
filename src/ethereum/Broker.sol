@@ -70,7 +70,7 @@ contract Broker is Ownable {
     // === CONSTRUCTOR ===
 
     constructor() public {
-        // fishBase = new FishBase(address(this));
+
     }
 
     // === FUNCTIONS ===
@@ -133,7 +133,7 @@ contract Broker is Ownable {
 
     function summonFish(uint256 _tokenId) external whenRegistered {
         require(tokenIdToCurrentTank[_tokenId] != msg.sender, "Tank holds fish already.");
-        // require(msg.sender == fishBase.ownerOf(_tokenId), "For owner of this fish only.");
+        require(msg.sender == fishBase.ownerOf(_tokenId), "For owner of this fish only.");
 
         tokenIdToCurrentTank[_tokenId] = msg.sender;
 

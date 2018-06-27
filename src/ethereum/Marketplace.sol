@@ -45,12 +45,12 @@ contract Marketplace is Ownable {
     // === FUNCTIONS ===
 
     function offerFish(uint256 _tokenId, uint256 _price) external {
-        // require(fishBase.ownerOf(_tokenId) == msg.sender);
+        require(fishBase.ownerOf(_tokenId) == msg.sender);
 
         saleOf[_tokenId] = Offer(msg.sender, _price);
     }
 
-    function removeFishSell(uint256 _tokenId) public {
+    function removeFishOffer(uint256 _tokenId) external {
         require(saleOf[_tokenId].seller == msg.sender);
 
         delete saleOf[_tokenId];
@@ -64,7 +64,7 @@ contract Marketplace is Ownable {
         Offer storage sale = saleOf[_tokenId];
 
         // require(fishBase.getApproved(_tokenId) == address(this));
-        require(sale.seller != address(0));
+        require(isForSale(_tokenId));
         require(msg.value >= sale.price);
         // require(broker.tokenIdToCurrentTank(_tokenId) == msg.sender);
 
@@ -74,7 +74,7 @@ contract Marketplace is Ownable {
         delete saleOf[_tokenId];
     }
 
-    function isForSale(uint256 _tokenId) external view returns (bool) {
+    function isForSale(uint256 _tokenId) public view returns (bool) {
         return saleOf[_tokenId].seller != address(0);
     }
 
