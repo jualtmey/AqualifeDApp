@@ -38,12 +38,14 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 
         setLocationRelativeTo(null);
         setResizable(false);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         addWindowListener(new WindowAdapter() {
-            public void windowClosed(WindowEvent e) {
-                tankModel.finish();
-                System.exit(0);
+            @Override
+            public void windowClosing(WindowEvent e) {
+                setTitle("Deregister and exit...");
+                setEnabled(false);
+                aqualifeController.stop();
             }
         });
 
@@ -87,12 +89,15 @@ public class AquaGui extends JFrame implements Runnable, Observer {
                 case REGISTRATION:
                     setTitle(tankModel.getId());
                     break;
-//                case TRANSFER:
+                case TRANSFER:
+                    fishDialog.fillOwnedFishTokenList();
 //                    JOptionPane.showMessageDialog(this, "You own a new FishToken: " + event.tokenId);
+                    break;
+                case MARKETPLACE:
+                    fishDialog.fillForSaleFishTokenList();
+                    break;
                 case NEW_BLOCK:
                     refreshBalance();
-                    fishDialog.fillOwnedFishTokenList();
-                    fishDialog.fillForSaleFishTokenList();
                     break;
             }
         }

@@ -74,8 +74,4 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 		}
 	}
 
-	public synchronized void finish() {
-		forwarder.deregister(id);
-	}
-
 }

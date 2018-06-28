@@ -42,6 +42,7 @@ contract Broker is Ownable {
 
     mapping (address => Client) public clients;
     mapping (uint256 => address) public tokenIdToCurrentTank;
+    mapping (address => uint256) public tokensInTank;
 
     uint public clientIdCounter = 1;
     uint public size;
@@ -127,17 +128,44 @@ contract Broker is Ownable {
         }
 
         tokenIdToCurrentTank[_tokenId] = to;
+        tokensInTank[msg.sender]--;
+        tokensInTank[to]++;
 
         emit HandoffFish(to, _tokenId, _y, _direction);
     }
 
     function summonFish(uint256 _tokenId) external whenRegistered {
-        require(tokenIdToCurrentTank[_tokenId] != msg.sender, "Tank holds fish already.");
+        address currentTank = tokenIdToCurrentTank[_tokenId];
+
+        require(currentTank != msg.sender, "Tank holds fish already.");
         require(msg.sender == fishBase.ownerOf(_tokenId), "For owner of this fish only.");
 
+        tokensInTank[currentTank]--;
         tokenIdToCurrentTank[_tokenId] = msg.sender;
+        tokensInTank[msg.sender]++;
 
         emit SummonFish(msg.sender, _tokenId);
+    }
+
+    function getAllTokensInTank(address _address) external view returns (uint256[]) {
+        uint256 tokenCount = tokensInTank[_address];
+
+        if (tokenCount == 0) {
+            return new uint256[](0);
+        } else {
+            uint256[] memory result = new uint256[](tokenCount);
+            uint256 totalFishToken = fishBase.totalSupply();
+            uint256 resultIndex = 0;
+
+            for (uint256 tokenId = 0; tokenId < totalFishToken; tokenId++) {
+                if (tokenIdToCurrentTank[tokenId] == _address) {
+                    result[resultIndex] = tokenId;
+                    resultIndex++;
+                }
+            }
+
+            return result;
+        }
     }
 
     function setFishBase(address _newAddress) external onlyOwner {

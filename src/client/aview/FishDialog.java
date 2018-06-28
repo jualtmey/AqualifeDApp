@@ -67,7 +67,7 @@ public class FishDialog extends JDialog {
             topList.setFont(new Font("Courier New", Font.PLAIN, 14));
 
             JScrollPane topListScroller = new JScrollPane(topList);
-            topListScroller.setPreferredSize(new Dimension(500, 120));
+            topListScroller.setPreferredSize(new Dimension(600, 120));
 
             JPanel topButtonsPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 
@@ -80,6 +80,21 @@ public class FishDialog extends JDialog {
                 aqualifeController.summonFish(fishInfo.getTokenId());
             });
 
+            JButton renameButton = new JButton("Rename");
+            renameButton.addActionListener(e -> {
+                FishInfo fishInfo = (FishInfo) topList.getSelectedValue();
+                if (fishInfo == null) {
+                    return;
+                }
+
+                String name = JOptionPane.showInputDialog("Set new name:");
+                if (name.isEmpty()) {
+                    return;
+                }
+
+                aqualifeController.renameFish(fishInfo, name);
+            });
+
             JButton sellButton = new JButton("Sell");
             sellButton.addActionListener(e -> {
                 FishInfo fishInfo = (FishInfo) topList.getSelectedValue();
@@ -88,12 +103,27 @@ public class FishDialog extends JDialog {
                 }
 
                 String priceInEther = JOptionPane.showInputDialog("Specify price (in Ether):");
+                if (priceInEther.isEmpty()) {
+                    return;
+                }
 
                 aqualifeController.offerFish(fishInfo, Double.parseDouble(priceInEther));
             });
 
+            JButton cancelSellButton = new JButton("Cancel Sell");
+            cancelSellButton.addActionListener(e -> {
+                FishInfo fishInfo = (FishInfo) topList.getSelectedValue();
+                if (fishInfo == null) {
+                    return;
+                }
+
+                aqualifeController.cancelSell(fishInfo);
+            });
+
             topButtonsPanel.add(summonButton);
+            topButtonsPanel.add(renameButton);
             topButtonsPanel.add(sellButton);
+            topButtonsPanel.add(cancelSellButton);
 
             add(topListScroller);
             add(topButtonsPanel);
@@ -115,7 +145,7 @@ public class FishDialog extends JDialog {
             bottomList.setFont(new Font("Courier New", Font.PLAIN, 14));
 
             JScrollPane bottomListScroller = new JScrollPane(bottomList);
-            bottomListScroller.setPreferredSize(new Dimension(500, 120));
+            bottomListScroller.setPreferredSize(new Dimension(600, 120));
 
             JPanel bottomButtonsPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 

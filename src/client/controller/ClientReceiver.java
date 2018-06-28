@@ -2,6 +2,7 @@ package client.controller;
 
 import client.contracts.Broker;
 import client.contracts.FishBase;
+import client.contracts.Marketplace;
 import client.model.Direction;
 import org.web3j.abi.EventEncoder;
 import org.web3j.protocol.Web3j;
@@ -17,7 +18,7 @@ public class ClientReceiver {
     private Web3j web3;
     private Broker broker;
     private FishBase fishBase;
-//    private Marketplace marketplace;
+    private Marketplace marketplace;
 
     private AqualifeController aqualifeController;
 
@@ -29,6 +30,7 @@ public class ClientReceiver {
         web3 = clientCommunicator.getWeb3();
         broker = clientCommunicator.getBroker();
         fishBase = clientCommunicator.getFishBase();
+        marketplace = clientCommunicator.getMarketplace();
 
         this.aqualifeController = aqualifeController;
     }
@@ -51,10 +53,19 @@ public class ClientReceiver {
 
         EthFilter transferFilter = new EthFilter(DefaultBlockParameterName.LATEST,
                 DefaultBlockParameterName.LATEST, fishBase.getContractAddress())
-                .addSingleTopic(EventEncoder.encode(FishBase.TRANSFER_EVENT))
-                .addNullTopic()
-                .addSingleTopic(ClientCommunicator.addressToTopic(address));
+                .addSingleTopic(EventEncoder.encode(FishBase.TRANSFER_EVENT));
 
+        EthFilter offerFilter = new EthFilter(DefaultBlockParameterName.LATEST,
+                DefaultBlockParameterName.LATEST, marketplace.getContractAddress())
+                .addSingleTopic(EventEncoder.encode(Marketplace.OFFER_EVENT));
+
+        EthFilter saleFilter = new EthFilter(DefaultBlockParameterName.LATEST,
+                DefaultBlockParameterName.LATEST, marketplace.getContractAddress())
+                .addSingleTopic(EventEncoder.encode(Marketplace.SALE_EVENT));
+
+        EthFilter cancellationFilter = new EthFilter(DefaultBlockParameterName.LATEST,
+                DefaultBlockParameterName.LATEST, marketplace.getContractAddress())
+                .addSingleTopic(EventEncoder.encode(Marketplace.CANCELLATION_EVENT));
 
 
         broker.registerEventObservable(registerFilter).subscribe(event -> {
@@ -71,7 +82,7 @@ public class ClientReceiver {
                     event.recipient, event.tokenId, event.y.intValue(), event.direction));
 
             int y = event.y.intValue();
-            Direction direction =  Direction.toDirection(event.direction.intValue());
+            Direction direction = Direction.toDirection(event.direction.intValue());
 
             aqualifeController.receiveFish(event.tokenId, y, direction);
         });
@@ -85,17 +96,42 @@ public class ClientReceiver {
         });
 
 
-
         fishBase.transferEventObservable(transferFilter).subscribe(event -> {
             LOGGER.info("--- New Transfer Event ---");
             LOGGER.info(String.format("From: %s%nTo: %s%nTokenID: %s%n",
                     event.from, event.to, event.tokenId));
 
+            aqualifeController.onTransfer();
+        });
 
+
+        marketplace.offerEventObservable(offerFilter).subscribe(event -> {
+            LOGGER.info("--- New Offer Event ---");
+            LOGGER.info(String.format("Seller: %s%nTokenID: %s%nPrice: %s%n",
+                    event.seller, event.tokenId, event.price));
+
+            aqualifeController.onMarketplace();
+        });
+
+        marketplace.saleEventObservable(saleFilter).subscribe(event -> {
+            LOGGER.info("--- New Sale Event ---");
+            LOGGER.info(String.format("Seller: %s%nBuyer: %s%nTokenID: %s%nPrice: %s%n",
+                    event.seller, event.buyer, event.tokenId, event.price));
+
+            aqualifeController.onMarketplace();
+        });
+
+        marketplace.cancellationEventObservable(cancellationFilter).subscribe(event -> {
+            LOGGER.info("--- New Cancellation Event ---");
+            LOGGER.info(String.format("TokenID: %s%n",
+                    event.tokenId));
+
+            aqualifeController.onMarketplace();
         });
 
 
         web3.blockObservable(false).subscribe(block -> aqualifeController.onNewBlock());
+
 
         LOGGER.info("Subscribed to events");
     }

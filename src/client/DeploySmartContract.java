@@ -11,6 +11,8 @@ import org.web3j.tx.TransactionManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
@@ -39,12 +41,19 @@ public class DeploySmartContract {
         FishBase fishBase;
         Marketplace marketplace;
 
+        CompletableFuture<Broker> brokerFuture;
+        CompletableFuture<FishBase> fishBaseFuture;
+        CompletableFuture<Marketplace> marketplaceFuture;
+
+
+        brokerFuture = Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+        fishBaseFuture = FishBase.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+        marketplaceFuture = Marketplace.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+
         try {
-
-            broker = Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
-            fishBase = FishBase.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
-            marketplace = Marketplace.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).send();
-
+            broker = brokerFuture.get();
+            fishBase = fishBaseFuture.get();
+            marketplace = marketplaceFuture.get();
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -54,14 +63,14 @@ public class DeploySmartContract {
         System.out.println("Address of FishBase: " + fishBase.getContractAddress());
         System.out.println("Address of Marketplace: " + marketplace.getContractAddress());
 
-        try {
-            broker.setFishBase(fishBase.getContractAddress()).send();
-            fishBase.setCreateFishAuthorized(marketplace.getContractAddress());
-            marketplace.setBroker(broker.getContractAddress()).send();
-            marketplace.setFishBase(fishBase.getContractAddress()).send();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        broker.setFishBase(fishBase.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("Broker - configured FishBase"));
+        fishBase.setCreateFishAuthorized(marketplace.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("FishBase - configured CreateFishAuthorized"));
+        marketplace.setBroker(broker.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("Marketplace - configured Broker"));
+        marketplace.setFishBase(fishBase.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("Marketplace - configured FishBase"));
     }
 
     public static void deployOnGanache() {

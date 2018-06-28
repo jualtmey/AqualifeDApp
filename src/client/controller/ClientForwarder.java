@@ -65,7 +65,7 @@ public class ClientForwarder {
 
     public void approveMarketplaceForAll() {
         try {
-            fishBase.isApprovedForAll(clientCommunicator.getAccountAddress(), marketplace.getContractAddress()).send();
+            fishBase.setApprovalForAll(marketplace.getContractAddress(), true).send();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -81,6 +81,14 @@ public class ClientForwarder {
 
     public void buyFish(BigInteger tokenId, BigInteger price) {
         marketplace.buyFish(tokenId, price).sendAsync();
+    }
+
+    public void cancelSell(BigInteger tokenId) {
+        marketplace.cancelFishOffer(tokenId).sendAsync();
+    }
+
+    public void renameFish(BigInteger tokenId, String name) {
+        fishBase.changeFishName(tokenId, name).sendAsync();
     }
 
     public FishInfo getFishInfo(BigInteger tokenId) {
@@ -112,6 +120,15 @@ public class ClientForwarder {
         return null;
     }
 
+    public List<BigInteger> getAllTokensForSale() {
+        try {
+            return marketplace.listAllSales().send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public BigInteger getTokenPrice(BigInteger tokenId) {
         try {
             if (!marketplace.isForSale(tokenId).send().booleanValue()) {
@@ -137,6 +154,15 @@ public class ClientForwarder {
     public BigInteger getNewFishPrice() {
         try {
             return marketplace.newFishPrice().send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<BigInteger> getAllTokensInTank() {
+        try {
+            return broker.getAllTokensInTank(clientCommunicator.getAccountAddress()).send();
         } catch (Exception e) {
             e.printStackTrace();
         }

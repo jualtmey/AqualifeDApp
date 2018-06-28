@@ -28,6 +28,10 @@ contract Marketplace is Ownable {
         uint256 price
     );
 
+    event Cancellation(
+        uint256 indexed tokenId
+    );
+
     // === STORAGE ===
 
     mapping (uint256 => Offering) public saleOf;
@@ -56,12 +60,20 @@ contract Marketplace is Ownable {
     function offerFish(uint256 _tokenId, uint256 _price) external {
         require(fishBase.ownerOf(_tokenId) == msg.sender);
 
+        // price update of an existing offer
+        if (!isForSale(_tokenId)) {
+            numberOfSales++;
+        }
+
         saleOf[_tokenId] = Offering(msg.sender, _price);
-        numberOfSales++;
+
+        emit Offer(msg.sender, _tokenId, _price);
     }
 
-    function removeFishOffer(uint256 _tokenId) external {
+    function cancelFishOffer(uint256 _tokenId) external {
         require(saleOf[_tokenId].seller == msg.sender);
+
+        emit Cancellation(_tokenId);
 
         delete saleOf[_tokenId];
         numberOfSales--;
@@ -74,13 +86,14 @@ contract Marketplace is Ownable {
     function buyFish(uint256 _tokenId) external payable {
         Offering storage sale = saleOf[_tokenId];
 
-        // require(fishBase.getApproved(_tokenId) == address(this));
-        require(isForSale(_tokenId));
-        require(msg.value >= sale.price);
+        require(isForSale(_tokenId), "Token is not for sale.");
+        require(msg.value >= sale.price, "Not enough money.");
         // require(broker.tokenIdToCurrentTank(_tokenId) == msg.sender);
 
         fishBase.transferFrom(sale.seller, msg.sender, _tokenId);
         sale.seller.transfer(sale.price);
+
+        emit Sale(sale.seller, msg.sender, _tokenId, sale.price);
 
         delete saleOf[_tokenId];
         numberOfSales--;

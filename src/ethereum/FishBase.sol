@@ -136,7 +136,7 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
         require(tokenOwner[_tokenId] != address(0)); // tokenId exists, is valid
         require(msg.sender == _from || msg.sender == tokenApprovals[_tokenId] || isApprovedForAll(_from, msg.sender)); // sender is owner or approved
         require(_from == tokenOwner[_tokenId]); // _from is token owner
-        require(_to != address(0)); // save transfer, token can't be lost
+        require(_to != address(0)); // token can't be lost
         require(_to != address(this)); // don't transfer to this contract
 
         transfer(_from, _to, _tokenId);

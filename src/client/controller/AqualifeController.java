@@ -26,15 +26,27 @@ public class AqualifeController extends Observable {
     }
 
     public void start() {
+        clientForwarder.getAllTokensInTank().forEach(tokenId -> receiveFishRandom(tokenId));
+
         clientForwarder.register();
         if (!clientForwarder.isMarketplaceApprovedForAll()) {
             clientForwarder.approveMarketplaceForAll();
         }
+
         tankModel.run();
+    }
+
+    public void stop() {
+        clientForwarder.deregister(tankModel.getId());
+        System.exit(0);
     }
 
     public void offerFish(FishInfo fishInfo, double priceInEther) {
         clientForwarder.offer(fishInfo.getTokenId(), Util.convertEtherToWei(BigDecimal.valueOf(priceInEther)));
+    }
+
+    public void cancelSell(FishInfo fishInfo) {
+        clientForwarder.cancelSell(fishInfo.getTokenId());
     }
 
     public void buyNewFish(String name) {
@@ -43,6 +55,10 @@ public class AqualifeController extends Observable {
 
     public void buyFish(FishInfo fishInfo) {
         clientForwarder.buyFish(fishInfo.getTokenId(), fishInfo.getPrice());
+    }
+
+    public void renameFish(FishInfo fishInfo, String name) {
+        clientForwarder.renameFish(fishInfo.getTokenId(), name);
     }
 
     public void summonFish(BigInteger tokenId) {
@@ -68,13 +84,23 @@ public class AqualifeController extends Observable {
         notifyObservers(Event.REGISTRATION);
     }
 
+    public void onTransfer() {
+        setChanged();
+        notifyObservers(Event.TRANSFER);
+    }
+
+    public void onMarketplace() {
+        setChanged();
+        notifyObservers(Event.MARKETPLACE);
+    }
+
     public void onNewBlock() {
         setChanged();
         notifyObservers(Event.NEW_BLOCK);
     }
 
     public List<FishInfo> getFishInfoOfOwnedFishToken() {
-        List<FishInfo> fishInfo = new LinkedList<>();
+        List<FishInfo> fishInfo = new ArrayList<>();
 
         clientForwarder.getOwnedTokens().forEach(tokenId -> fishInfo.add(clientForwarder.getFishInfo(tokenId)));
 
@@ -82,13 +108,10 @@ public class AqualifeController extends Observable {
     }
 
     public List<FishInfo> getForSaleFishInfo() {
-        List<FishInfo> fishInfo = new LinkedList<>();
+        List<FishInfo> fishInfo = new ArrayList<>();
 
-        tankModel.forEach(fish -> {
-            if (fish.getFishInfo().isForSale())
-                fishInfo.add(fish.getFishInfo());
-        });
-        fishInfo.sort(Comparator.comparing(FishInfo::getTokenId));
+        clientForwarder.getAllTokensForSale().forEach(tokenId -> fishInfo.add(clientForwarder.getFishInfo(tokenId)));
+//        fishInfo.sort(Comparator.comparing(FishInfo::getTokenId));
 
         return fishInfo;
     }

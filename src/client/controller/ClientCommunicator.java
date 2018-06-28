@@ -23,9 +23,9 @@ import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class ClientCommunicator {
 
-    private static final String BROKER_ADDRESS = "0xf86eefa1b51d6e808a985eb17a8f914706d64562";
-    private static final String FISH_BASE_ADDRESS = "0x362919f4588299686f31be5855cdd2b7f4fb1427";
-    private static final String MARKETPLACE_ADDRESS = "0x73ccb78b04499111e6e6fc67641e1c93f747c2ad";
+    private static final String BROKER_ADDRESS = "0xafb05e00747697d8bddd9b66da1097288392fbe6";
+    private static final String FISH_BASE_ADDRESS = "0x1cc65d270391c75e9579749635feb0ecf39fc0f1";
+    private static final String MARKETPLACE_ADDRESS = "0x7883f9be1b671f8ee8d185a84c2c8d9adad0bbfd";
 
     private static final int POLLING_INTERVAL = 1000; // millis
     private static final int POLLING_TIMEOUT = 60000; // millis
