@@ -11,8 +11,8 @@ public final class FishModel implements Serializable {
 	private final static Random rand = new Random();
 
 	private final FishInfo fishInfo;
-	private int x;
-	private int y;
+	private double x;
+	private double y;
 	private Direction direction;
 
 	private boolean toggled;
@@ -41,11 +41,11 @@ public final class FishModel implements Serializable {
 	}
 
 	public int getX() {
-		return x;
+		return (int) x;
 	}
 
 	public int getY() {
-		return y;
+		return (int) y;
 	}
 
 	public Direction getDirection() {
@@ -83,7 +83,7 @@ public final class FishModel implements Serializable {
 	}
 
 	public void update() {
-		x += direction.getVector();
+		x += direction.getVector() * 0.5;
 
 		double discreteSin = Math.round(Math.sin(x / 30.0));
 		discreteSin = rand.nextInt(10) < 8 ? 0 : discreteSin;

@@ -110,6 +110,10 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
         }
     }
 
+    function totalSupply() external view returns (uint256) {
+        return fishies.length;
+    }
+
     // === ERC721 FUNCTIONS ===
 
     function balanceOf(address _owner) external view returns (uint256) {

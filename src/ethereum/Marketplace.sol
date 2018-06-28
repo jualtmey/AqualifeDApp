@@ -8,12 +8,18 @@ contract Marketplace is Ownable {
 
     // === STRUCTS ===
 
-    struct Offer {
+    struct Offering {
         address seller;
         uint256 price;
     }
 
     // === EVENTS ===
+
+    event Offer(
+        address indexed seller,
+        uint256 indexed tokenId,
+        uint256 price
+    );
 
     event Sale(
         address indexed seller,
@@ -22,7 +28,10 @@ contract Marketplace is Ownable {
         uint256 price
     );
 
-    mapping (uint256 => Offer) public saleOf;
+    // === STORAGE ===
+
+    mapping (uint256 => Offering) public saleOf;
+    uint256 private numberOfSales;
 
     uint public newFishPrice = 1e18; // in Wei (1e18 Wei = 1 Ether)
 
@@ -47,13 +56,15 @@ contract Marketplace is Ownable {
     function offerFish(uint256 _tokenId, uint256 _price) external {
         require(fishBase.ownerOf(_tokenId) == msg.sender);
 
-        saleOf[_tokenId] = Offer(msg.sender, _price);
+        saleOf[_tokenId] = Offering(msg.sender, _price);
+        numberOfSales++;
     }
 
     function removeFishOffer(uint256 _tokenId) external {
         require(saleOf[_tokenId].seller == msg.sender);
 
         delete saleOf[_tokenId];
+        numberOfSales--;
     }
 
     function buyNewFish(string _name) external costs(newFishPrice) payable {
@@ -61,7 +72,7 @@ contract Marketplace is Ownable {
     }
 
     function buyFish(uint256 _tokenId) external payable {
-        Offer storage sale = saleOf[_tokenId];
+        Offering storage sale = saleOf[_tokenId];
 
         // require(fishBase.getApproved(_tokenId) == address(this));
         require(isForSale(_tokenId));
@@ -72,10 +83,26 @@ contract Marketplace is Ownable {
         sale.seller.transfer(sale.price);
 
         delete saleOf[_tokenId];
+        numberOfSales--;
     }
 
     function isForSale(uint256 _tokenId) public view returns (bool) {
         return saleOf[_tokenId].seller != address(0);
+    }
+
+    function listAllSales() external view returns (uint256[]) {
+        uint256[] memory sales = new uint256[](numberOfSales);
+        uint256 maxTokenId = fishBase.totalSupply();
+
+        uint256 resultIndex = 0;
+        for (uint256 tokenId = 0; tokenId < maxTokenId; tokenId++) {
+            if (isForSale(tokenId)) {
+                sales[resultIndex] = tokenId;
+                resultIndex++;
+            }
+        }
+
+        return sales;
     }
 
     function setBroker(address _newAddress) external onlyOwner {
