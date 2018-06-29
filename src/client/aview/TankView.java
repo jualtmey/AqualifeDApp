@@ -1,5 +1,6 @@
 package client.aview;
 
+import client.model.FishInfo;
 import client.model.FishModel;
 import client.model.TankModel;
 
@@ -7,18 +8,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.math.BigInteger;
+import java.nio.Buffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
 @SuppressWarnings("serial")
 public class TankView extends JPanel implements Observer {
 	private final TankModel tankModel;
-	private final FishView fishView;
 	private final Runnable repaintRunnable;
 
 	public TankView(final TankModel tankModel) {
 		this.tankModel = tankModel;
-		fishView = new FishView();
 
 		repaintRunnable = new Runnable() {
 			@Override
@@ -48,8 +52,7 @@ public class TankView extends JPanel implements Observer {
 		Graphics2D g2d = (Graphics2D) g;
 
 		for (FishModel fishModel : tankModel) {
-			// TODO: fishView.getImage(...) calculates every time the color of the fish. Save calculated image to increase performance
-			g2d.drawImage(fishView.getImage(fishModel), fishModel.getX(), fishModel.getY(), null);
+			g2d.drawImage(FishView.dye(FishView.getImage(fishModel), FishView.getFishColor(fishModel)), fishModel.getX(), fishModel.getY(), null);
 			g2d.drawString(fishModel.getId(), fishModel.getX(), fishModel.getY());
 		}
 

@@ -67,7 +67,7 @@ public class FishDialog extends JDialog {
             topList.setFont(new Font("Courier New", Font.PLAIN, 14));
 
             JScrollPane topListScroller = new JScrollPane(topList);
-            topListScroller.setPreferredSize(new Dimension(600, 120));
+            topListScroller.setPreferredSize(new Dimension(550, 120));
 
             JPanel topButtonsPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 
@@ -145,7 +145,7 @@ public class FishDialog extends JDialog {
             bottomList.setFont(new Font("Courier New", Font.PLAIN, 14));
 
             JScrollPane bottomListScroller = new JScrollPane(bottomList);
-            bottomListScroller.setPreferredSize(new Dimension(600, 120));
+            bottomListScroller.setPreferredSize(new Dimension(550, 120));
 
             JPanel bottomButtonsPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 
@@ -164,7 +164,7 @@ public class FishDialog extends JDialog {
                 BigInteger price = aqualifeController.getNewFishPrice();
                 String name = JOptionPane.showInputDialog(
                         "The creation of a new FishToken costs " + Util.convertWeiToEther(price) + " Ether.\n" +
-                                "Set name of fish:");
+                                "Enter name of fish:");
                 if (name != null) {
                     aqualifeController.buyNewFish(name);
                 }

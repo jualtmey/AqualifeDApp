@@ -3,13 +3,21 @@ package client.controller;
 import client.contracts.Broker;
 import client.contracts.FishBase;
 import client.contracts.Marketplace;
+import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.tx.ClientTransactionManager;
+import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.TransactionManager;
+import org.web3j.tx.response.Callback;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.tx.response.QueuingTransactionReceiptProcessor;
+import org.web3j.tx.response.TransactionReceiptProcessor;
 import org.web3j.utils.Async;
 import org.web3j.utils.Convert;
 
@@ -32,6 +40,7 @@ public class ClientCommunicator {
     private static final int POLLING_ATTEMPTS = POLLING_TIMEOUT / POLLING_INTERVAL;
 
     private Web3j web3;
+    private TransactionManager transactionManager;
     private Credentials credentials;
     private String accountAddress;
 
@@ -44,7 +53,7 @@ public class ClientCommunicator {
 
     private static final Logger LOGGER = Logger.getLogger(ClientCommunicator.class.getName());
 
-    public ClientCommunicator() {
+    public ClientCommunicator(String password, String pathToWalletFile) {
         LOGGER.setLevel(Level.INFO);
 
 //        web3 = Web3j.build(new HttpService("http://localhost:8545/"));  // defaults to http://localhost:8545/ (Ethereum-Node supporting JSON-RPC) Default PollingInterval: 15 * 1000 millis
@@ -53,25 +62,44 @@ public class ClientCommunicator {
         // test connection to node
         String clientVersion = getClientVersion();
         LOGGER.info("Client version:\n" + clientVersion);
+
+        try {
+            credentials = WalletUtils.loadCredentials(password, pathToWalletFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        transactionManager = new FastRawTransactionManager(
+                web3, credentials, new PollingTransactionReceiptProcessor(web3, POLLING_INTERVAL, POLLING_ATTEMPTS));
+
+//        Callback callback = new Callback() {
+//            @Override
+//            public void accept(TransactionReceipt transactionReceipt) {
+//
+//            }
+//
+//            @Override
+//            public void exception(Exception e) {
+//                e.printStackTrace();
+//            }
+//        };
+//
+//        transactionManager = new FastRawTransactionManager(
+//                web3, credentials, new QueuingTransactionReceiptProcessor(web3, callback, POLLING_ATTEMPTS, POLLING_INTERVAL));
+
+        accountAddress = credentials.getAddress();
     }
 
     public void loadBroker(String address) {
-        TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
         broker = Broker.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
     }
 
     public void loadFishBase(String address) {
-        TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
         fishBase = FishBase.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
     }
 
     public void loadMarketplace(String address) {
-        TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
         marketplace = Marketplace.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
-    }
-
-    public void setAccountAddress(String address) {
-        accountAddress = address;
     }
 
     public String getAccountAddress() {

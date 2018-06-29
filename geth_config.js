@@ -22,7 +22,7 @@ function unlockAllAccounts() {
     })
 }
 
-unlockAllAccounts();
+// unlockAllAccounts();
 
 // eth.filter("latest", function(err, block) { checkWork(); });
 // eth.filter("pending", function(err, block) { checkWork(); });

@@ -1,6 +1,7 @@
 package client.aview;
 
 import client.model.Direction;
+import client.model.FishInfo;
 import client.model.FishModel;
 
 import javax.swing.*;
@@ -32,12 +33,14 @@ public class FishView {
 			FishView.class.getResource("/client/resources/piranha-grey-right.png")).getImage()
 			.getScaledInstance(FishModel.getXSize(), -1, Image.SCALE_SMOOTH);
 
-	public Image getImage(FishModel fishModel) {
+	public static Image getImage(FishModel fishModel) {
 //		return fishModel.isToggled() ? (fishModel.getDirection() == Direction.LEFT ? imgRedLeft : imgRedRight)
 //				: (fishModel.getDirection() == Direction.LEFT ? imgBlackLeft : imgBlackRight);
 
-		Image fishImage = fishModel.getDirection() == Direction.LEFT ? imgGreyLeft : imgGreyRight;
+		return fishModel.getDirection() == Direction.LEFT ? imgGreyLeft : imgGreyRight;
+	}
 
+	public static Color getFishColor(FishModel fishModel) {
 		int uniqueData = fishModel.getFishInfo().getUniqueData();
 		int last8BitMask = 0x000000FF;
 
@@ -47,10 +50,10 @@ public class FishView {
 //		int a = (uniqueData >> 24) & last8BitMask;
 		int a = 64;
 
-		return dye(fishImage, new Color(r, g, b, a));
+		return new Color(r, g, b, a);
 	}
 
-	private static BufferedImage dye(Image image, Color color) {
+	public static BufferedImage dye(Image image, Color color) {
 		// SOURCE: https://stackoverflow.com/questions/21382966/colorize-a-picture-in-java
 		int w = image.getWidth(null);
 		int h = image.getHeight(null);
