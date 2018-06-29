@@ -20,7 +20,6 @@ public class Aqualife {
         ClientCommunicator communicator = new ClientCommunicator();
 
         communicator.setAccountAddress(showAccountAddressSelection(communicator.getAccounts()));
-        communicator.loadContracts();
 
         AqualifeController aqualifeController = new AqualifeController(communicator);
 

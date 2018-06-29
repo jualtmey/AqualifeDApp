@@ -15,6 +15,14 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
         uint32 uniqueData; // color information of fish
     }
 
+    // === EVENTS ===
+
+    event RenameToken(
+        address indexed owner,
+        uint256 indexed tokenId,
+        string newName
+    );
+
     // === CONSTANTS ===
 
     string constant private tokenName = "FishToken";
@@ -68,6 +76,8 @@ contract FishBase is ERC721, ERC721Metadata /*, ERC165 */, Ownable {
         require(msg.sender == tokenOwner[_tokenId]);
 
         fishies[_tokenId].name = _name;
+
+        emit RenameToken(msg.sender, _tokenId, _name);
     }
 
     function transfer(address _from, address _to, uint256 _tokenId) private {

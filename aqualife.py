@@ -101,7 +101,7 @@ def clean():
 
 
 def run():
-    os.system('geth --networkid 55 --nodiscover --maxpeers 0 --rpc --rpccorsdomain "https://remix.ethereum.org" --datadir ' + PATH_GETH_DATADIR + ' --preload script.js console')
+    os.system('geth --networkid 55 --nodiscover --maxpeers 0 --rpc --rpccorsdomain "https://remix.ethereum.org" --datadir ' + PATH_GETH_DATADIR + ' --preload geth_config.js console')
 
 
 def print_help():

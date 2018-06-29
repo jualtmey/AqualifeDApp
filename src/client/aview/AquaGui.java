@@ -8,7 +8,6 @@ import client.model.TankModel;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.math.BigDecimal;
 import java.util.*;
 
 @SuppressWarnings("serial")
@@ -89,7 +88,7 @@ public class AquaGui extends JFrame implements Runnable, Observer {
                 case REGISTRATION:
                     setTitle(tankModel.getId());
                     break;
-                case TRANSFER:
+                case FISHBASE:
                     fishDialog.fillOwnedFishTokenList();
 //                    JOptionPane.showMessageDialog(this, "You own a new FishToken: " + event.tokenId);
                     break;

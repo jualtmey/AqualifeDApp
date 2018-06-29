@@ -7,6 +7,7 @@ function checkWork() {
         console.log("== Pending transactions! Mining...");
         miner.start(mining_threads);
     } else {
+        if (!eth.mining) return;
         miner.stop();
         console.log("== No transactions! Mining stopped.");
     }
@@ -25,7 +26,7 @@ unlockAllAccounts();
 
 // eth.filter("latest", function(err, block) { checkWork(); });
 // eth.filter("pending", function(err, block) { checkWork(); });
-//
+
 // checkWork();
 
 miner.start(mining_threads);

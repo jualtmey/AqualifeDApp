@@ -3,7 +3,7 @@ package client.model;
 public enum Event {
 
     REGISTRATION,
-    TRANSFER,
+    FISHBASE,
     MARKETPLACE,
     NEW_BLOCK
 

@@ -134,7 +134,7 @@ public class FishDialog extends JDialog {
 
         public BottomPanel() {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setBorder(BorderFactory.createTitledBorder("For Sale"));
+            setBorder(BorderFactory.createTitledBorder("Marketplace - For Sale"));
 
             forSaleFishTokenList = new DefaultListModel<>();
 
@@ -153,7 +153,7 @@ public class FishDialog extends JDialog {
             buyButton.addActionListener(e -> {
                 FishInfo selectedFish = (FishInfo) bottomList.getSelectedValue();
                 int selectedOption = JOptionPane.showConfirmDialog(
-                        this, "Do you want to buy this token?\n[" + selectedFish + "]", "Confirm", JOptionPane.YES_NO_OPTION);
+                        this, "Do you really want to buy this token?\n" + selectedFish, "Confirm", JOptionPane.YES_NO_OPTION);
                 if (selectedOption == JOptionPane.YES_OPTION) {
                     aqualifeController.buyFish(selectedFish);
                 }

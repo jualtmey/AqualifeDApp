@@ -55,6 +55,10 @@ public class ClientReceiver {
                 DefaultBlockParameterName.LATEST, fishBase.getContractAddress())
                 .addSingleTopic(EventEncoder.encode(FishBase.TRANSFER_EVENT));
 
+        EthFilter renameTokenFilter = new EthFilter(DefaultBlockParameterName.LATEST,
+                DefaultBlockParameterName.LATEST, fishBase.getContractAddress())
+                .addSingleTopic(EventEncoder.encode(FishBase.RENAMETOKEN_EVENT));
+
         EthFilter offerFilter = new EthFilter(DefaultBlockParameterName.LATEST,
                 DefaultBlockParameterName.LATEST, marketplace.getContractAddress())
                 .addSingleTopic(EventEncoder.encode(Marketplace.OFFER_EVENT));
@@ -73,7 +77,7 @@ public class ClientReceiver {
             LOGGER.info(String.format("Recipient: %s%nID: %s%n",
                     event.recipient, event.tankId));
 
-            aqualifeController.onRegistration(event.tankId);
+            aqualifeController.onRegistrationEvent(event.tankId);
         });
 
         broker.handoffFishEventObservable(handoffFishFilter).subscribe(event -> {
@@ -101,7 +105,15 @@ public class ClientReceiver {
             LOGGER.info(String.format("From: %s%nTo: %s%nTokenID: %s%n",
                     event.from, event.to, event.tokenId));
 
-            aqualifeController.onTransfer();
+            aqualifeController.onFishBaseEvent();
+        });
+
+        fishBase.renameTokenEventObservable(renameTokenFilter).subscribe(event -> {
+            LOGGER.info("--- New Rename Token Event ---");
+            LOGGER.info(String.format("Owner: %s%nTokenID: %s%nNewName: %s%n",
+                    event.owner, event.tokenId, event.newName));
+
+            aqualifeController.onFishBaseEvent();
         });
 
 
@@ -110,7 +122,7 @@ public class ClientReceiver {
             LOGGER.info(String.format("Seller: %s%nTokenID: %s%nPrice: %s%n",
                     event.seller, event.tokenId, event.price));
 
-            aqualifeController.onMarketplace();
+            aqualifeController.onMarketplaceEvent();
         });
 
         marketplace.saleEventObservable(saleFilter).subscribe(event -> {
@@ -118,7 +130,7 @@ public class ClientReceiver {
             LOGGER.info(String.format("Seller: %s%nBuyer: %s%nTokenID: %s%nPrice: %s%n",
                     event.seller, event.buyer, event.tokenId, event.price));
 
-            aqualifeController.onMarketplace();
+            aqualifeController.onMarketplaceEvent();
         });
 
         marketplace.cancellationEventObservable(cancellationFilter).subscribe(event -> {
@@ -126,11 +138,11 @@ public class ClientReceiver {
             LOGGER.info(String.format("TokenID: %s%n",
                     event.tokenId));
 
-            aqualifeController.onMarketplace();
+            aqualifeController.onMarketplaceEvent();
         });
 
 
-        web3.blockObservable(false).subscribe(block -> aqualifeController.onNewBlock());
+        web3.blockObservable(false).subscribe(block -> aqualifeController.onNewBlockEvent());
 
 
         LOGGER.info("Subscribed to events");

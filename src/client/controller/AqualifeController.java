@@ -3,11 +3,16 @@ package client.controller;
 import client.Util;
 import client.model.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class AqualifeController extends Observable {
+
+    private static final String PATH_CONTRACT_ADDRESSES = "./contract_address.txt";
 
     private TankModel tankModel;
 
@@ -17,6 +22,11 @@ public class AqualifeController extends Observable {
 
     public AqualifeController(ClientCommunicator clientCommunicator) {
         this.clientCommunicator = clientCommunicator;
+
+        List<String> addresses = readContractAddressesFromFile(PATH_CONTRACT_ADDRESSES);
+        clientCommunicator.loadBroker(addresses.get(0));
+        clientCommunicator.loadFishBase(addresses.get(1));
+        clientCommunicator.loadMarketplace(addresses.get(2));
 
         clientForwarder = new ClientForwarder(clientCommunicator);
         clientReceiver = new ClientReceiver(clientCommunicator, this);
@@ -78,23 +88,23 @@ public class AqualifeController extends Observable {
         receiveFish(tokenId, y, direction);
     }
 
-    public void onRegistration(BigInteger tankId) {
+    public void onRegistrationEvent(BigInteger tankId) {
         tankModel.onRegistration("Tank" + tankId);
         setChanged();
         notifyObservers(Event.REGISTRATION);
     }
 
-    public void onTransfer() {
+    public void onFishBaseEvent() {
         setChanged();
-        notifyObservers(Event.TRANSFER);
+        notifyObservers(Event.FISHBASE);
     }
 
-    public void onMarketplace() {
+    public void onMarketplaceEvent() {
         setChanged();
         notifyObservers(Event.MARKETPLACE);
     }
 
-    public void onNewBlock() {
+    public void onNewBlockEvent() {
         setChanged();
         notifyObservers(Event.NEW_BLOCK);
     }
@@ -122,6 +132,16 @@ public class AqualifeController extends Observable {
 
     public TankModel getTankModel() {
         return tankModel;
+    }
+
+    public List<String> readContractAddressesFromFile(String path) {
+        List<String> contractAddresses = new ArrayList<>();
+        try {
+            Files.readAllLines(Paths.get(path)).forEach(line -> contractAddresses.add(line.split(":")[1]));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return contractAddresses;
     }
 
 }

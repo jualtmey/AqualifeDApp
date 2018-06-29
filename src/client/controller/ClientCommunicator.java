@@ -23,12 +23,12 @@ import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class ClientCommunicator {
 
-    private static final String BROKER_ADDRESS = "0xafb05e00747697d8bddd9b66da1097288392fbe6";
-    private static final String FISH_BASE_ADDRESS = "0x1cc65d270391c75e9579749635feb0ecf39fc0f1";
-    private static final String MARKETPLACE_ADDRESS = "0x7883f9be1b671f8ee8d185a84c2c8d9adad0bbfd";
+//    private static final String BROKER_ADDRESS = "0xafb05e00747697d8bddd9b66da1097288392fbe6";
+//    private static final String FISH_BASE_ADDRESS = "0x1cc65d270391c75e9579749635feb0ecf39fc0f1";
+//    private static final String MARKETPLACE_ADDRESS = "0x7883f9be1b671f8ee8d185a84c2c8d9adad0bbfd";
 
     private static final int POLLING_INTERVAL = 1000; // millis
-    private static final int POLLING_TIMEOUT = 60000; // millis
+    private static final int POLLING_TIMEOUT = 5 * 60000; // millis
     private static final int POLLING_ATTEMPTS = POLLING_TIMEOUT / POLLING_INTERVAL;
 
     private Web3j web3;
@@ -47,7 +47,7 @@ public class ClientCommunicator {
     public ClientCommunicator() {
         LOGGER.setLevel(Level.INFO);
 
-//        web3 = Web3j.build(new HttpService("http://localhost:8545/"));  // defaults to http://localhost:8545/ (Ethereum-Node supporting JSON-RPC) PollingInterval: 15 * 1000
+//        web3 = Web3j.build(new HttpService("http://localhost:8545/"));  // defaults to http://localhost:8545/ (Ethereum-Node supporting JSON-RPC) Default PollingInterval: 15 * 1000 millis
         web3 = Web3j.build(new HttpService("http://localhost:8545/"), POLLING_INTERVAL, Async.defaultExecutorService());  // defaults to http://localhost:8545/ (Ethereum-Node supporting JSON-RPC)
 
         // test connection to node
@@ -55,52 +55,19 @@ public class ClientCommunicator {
         LOGGER.info("Client version:\n" + clientVersion);
     }
 
-    public void loadContracts() {
-        loadBroker();
-        loadFishBase();
-        loadMarketplace();
+    public void loadBroker(String address) {
+        TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
+        broker = Broker.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
     }
 
-    private void loadBroker() {
+    public void loadFishBase(String address) {
         TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
-        broker = Broker.load(BROKER_ADDRESS, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
-
-        try {
-            if (!broker.isValid()) {
-                LOGGER.info("Broker invalid - Exit");
-                System.exit(1);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        fishBase = FishBase.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
     }
 
-    private void loadFishBase() {
+    public void loadMarketplace(String address) {
         TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
-        fishBase = FishBase.load(FISH_BASE_ADDRESS, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
-
-        try {
-            if (!fishBase.isValid()) {
-                LOGGER.info("FishBase invalid - Exit");
-                System.exit(1);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void loadMarketplace() {
-        TransactionManager transactionManager = new ClientTransactionManager(web3, accountAddress, POLLING_ATTEMPTS, POLLING_INTERVAL);
-        marketplace = Marketplace.load(MARKETPLACE_ADDRESS, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
-
-        try {
-            if (!marketplace.isValid()) {
-                LOGGER.info("Marketplace invalid - Exit");
-                System.exit(1);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        marketplace = Marketplace.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
     }
 
     public void setAccountAddress(String address) {
