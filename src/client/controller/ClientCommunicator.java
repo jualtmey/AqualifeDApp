@@ -24,6 +24,7 @@ import org.web3j.utils.Convert;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -90,6 +91,18 @@ public class ClientCommunicator {
         accountAddress = credentials.getAddress();
     }
 
+    public CompletableFuture<Broker> deployBroker() {
+        return Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+    }
+
+    public CompletableFuture<FishBase> deployFishBase() {
+        return FishBase.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+    }
+
+    public CompletableFuture<Marketplace> deployMarketplace() {
+        return Marketplace.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+    }
+
     public void loadBroker(String address) {
         broker = Broker.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
     }
@@ -100,6 +113,10 @@ public class ClientCommunicator {
 
     public void loadMarketplace(String address) {
         marketplace = Marketplace.load(address, web3, transactionManager, GAS_PRICE, BigInteger.valueOf(2100000L));
+    }
+
+    public void shutdown() {
+        web3.shutdown();
     }
 
     public String getAccountAddress() {

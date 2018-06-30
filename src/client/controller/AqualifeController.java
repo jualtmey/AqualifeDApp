@@ -38,7 +38,7 @@ public class AqualifeController extends Observable {
     public void start() {
         clientForwarder.getAllTokensInTank().forEach(tokenId -> receiveFishRandom(tokenId));
 
-        clientForwarder.register();
+        clientForwarder.register(); // TODO: handle if already registered (Gui will not update to TankID)
         if (!clientForwarder.isMarketplaceApprovedForAll()) {
             clientForwarder.approveMarketplaceForAll();
         }
@@ -121,7 +121,6 @@ public class AqualifeController extends Observable {
         List<FishInfo> fishInfo = new ArrayList<>();
 
         clientForwarder.getAllTokensForSale().forEach(tokenId -> fishInfo.add(clientForwarder.getFishInfo(tokenId)));
-//        fishInfo.sort(Comparator.comparing(FishInfo::getTokenId));
 
         return fishInfo;
     }

@@ -1,45 +1,46 @@
 package client;
 
+import client.aview.AquaGui;
 import client.contracts.Broker;
 import client.contracts.FishBase;
 import client.contracts.Marketplace;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.ClientTransactionManager;
-import org.web3j.tx.Contract;
-import org.web3j.tx.TransactionManager;
+import client.controller.ClientCommunicator;
 
+import javax.swing.*;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-
-import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class DeploySmartContract {
 
-    private static final int POLLING_INTERVAL = 2000; // millis
-    private static final int POLLING_TIMEOUT = 5 * 60000; // millis
-    private static final int POLLING_ATTEMPTS = POLLING_TIMEOUT / POLLING_INTERVAL;
+    private static final String TITLE = "Deploy Smart Contract";
+    private static final String PATH_CONTRACT_ADDRESSES = "./contract_address.txt";
 
     public static void main(String[] args) {
         deployOnGeth();
     }
 
     public static void deployOnGeth() {
-        Web3j web3 = Web3j.build(new HttpService());  // defaults to http://localhost:8545/
+        // load account and initialize connection to ethereum node
+        String pathToWalletFile = AquaGui.showWalletFileChooser();
+        if (pathToWalletFile == null) return;
 
-        String address = null;
-        try {
-            address = web3.ethAccounts().send().getAccounts().get(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String accountPassword = AquaGui.showPasswordField();
 
-        TransactionManager transactionManager = new ClientTransactionManager(web3, address, POLLING_ATTEMPTS, POLLING_INTERVAL);
+        ClientCommunicator communicator = new ClientCommunicator(accountPassword, pathToWalletFile);
 
+
+        JOptionPane.showMessageDialog(null,
+                "Using address: " + communicator.getAccountAddress() + "\n" +
+                        "Deploying and initializing smart contracts (Broker, FishBase, Marketplace)...",
+                TITLE, JOptionPane.INFORMATION_MESSAGE);
+
+
+        // deploy smart contracts
         Broker broker;
         FishBase fishBase;
         Marketplace marketplace;
@@ -48,10 +49,9 @@ public class DeploySmartContract {
         CompletableFuture<FishBase> fishBaseFuture;
         CompletableFuture<Marketplace> marketplaceFuture;
 
-
-        brokerFuture = Broker.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
-        fishBaseFuture = FishBase.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
-        marketplaceFuture = Marketplace.deploy(web3, transactionManager, GAS_PRICE, BigInteger.valueOf(3000000L)).sendAsync();
+        brokerFuture = communicator.deployBroker();
+        fishBaseFuture = communicator.deployFishBase();
+        marketplaceFuture = communicator.deployMarketplace();
 
         try {
             broker = brokerFuture.get();
@@ -67,26 +67,42 @@ public class DeploySmartContract {
         System.out.println("Address of Marketplace: " + marketplace.getContractAddress());
 
 
+        // configure smart contracts
+        List<CompletableFuture> futures = new LinkedList<>();
 
-        broker.setFishBase(fishBase.getContractAddress()).sendAsync().
-                thenRun(() -> System.out.println("Broker - configured FishBase"));
-        fishBase.setCreateFishAuthorized(marketplace.getContractAddress()).sendAsync().
-                thenRun(() -> System.out.println("FishBase - configured CreateFishAuthorized"));
-        marketplace.setBroker(broker.getContractAddress()).sendAsync().
-                thenRun(() -> System.out.println("Marketplace - configured Broker"));
-        marketplace.setFishBase(fishBase.getContractAddress()).sendAsync().
-                thenRun(() -> System.out.println("Marketplace - configured FishBase"));
+        futures.add(broker.setFishBase(fishBase.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("Broker - configured FishBase")));
+        futures.add(fishBase.setCreateFishAuthorized(marketplace.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("FishBase - configured CreateFishAuthorized")));
+        futures.add(marketplace.setBroker(broker.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("Marketplace - configured Broker")));
+        futures.add(marketplace.setFishBase(fishBase.getContractAddress()).sendAsync().
+                thenRun(() -> System.out.println("Marketplace - configured FishBase")));
 
+        for (CompletableFuture future : futures) {
+            future.join();
+        }
+
+        // write contract addresses to file
         StringBuilder data = new StringBuilder();
         data.append("Broker Address:" + broker.getContractAddress() + "\n");
         data.append("FishBase Address:" + fishBase.getContractAddress() + "\n");
         data.append("Marketplace Address:" + marketplace.getContractAddress() + "\n");
 
+        Path contractAddressesPath = null;
         try {
-            Files.write(Paths.get("./contract_address.txt"), data.toString().getBytes());
+            contractAddressesPath = Files.write(Paths.get(PATH_CONTRACT_ADDRESSES), data.toString().getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+        JOptionPane.showMessageDialog(null,
+                "Done.\nAddresses written to file:\n"
+                        + contractAddressesPath.toAbsolutePath(), TITLE, JOptionPane.INFORMATION_MESSAGE);
+
+
+        System.exit(0);
     }
 
 }

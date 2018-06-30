@@ -8,10 +8,11 @@ import client.model.TankModel;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.*;
 
 @SuppressWarnings("serial")
-public class AquaGui extends JFrame implements Runnable, Observer {
+public class AquaGui extends JFrame implements Observer {
     private final List<JMenuItem> fishMenuItems = Collections
             .synchronizedList(new ArrayList<JMenuItem>());
 
@@ -29,15 +30,8 @@ public class AquaGui extends JFrame implements Runnable, Observer {
 
         TankView tankView = new TankView(tankModel);
         tankModel.addObserver(tankView);
-        add(tankView);
 
         fishDialog = new FishDialog(this, aqualifeController);
-
-        pack();
-
-        setLocationRelativeTo(null);
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -68,21 +62,74 @@ public class AquaGui extends JFrame implements Runnable, Observer {
         tankModel.addObserver(this);
         aqualifeController.addObserver(this);
 
+        add(tankView);
+
+        pack();
+
         setTitle("Not registered");
+        setLocationRelativeTo(null);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        setVisible(true);
     }
 
     private void refreshBalance() {
         balanceLabel.setText("ETH: " + communicator.getBalanceInEther() + " ");
     }
 
-    @Override
-    public void run() {
-        setVisible(true);
+    public static String showWalletFileChooser() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(new File("C:/Users/Julian/Desktop/AqualifeDApp/test/ethereum/keystore"));
+        fileChooser.setDialogTitle("Select Wallet File (Account)");
+
+        int returnVal = fileChooser.showOpenDialog(null);
+
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            return file.getAbsolutePath();
+        }
+        return null;
+    }
+
+    public static String showPasswordField() {
+        String password = JOptionPane.showInputDialog("Enter password (visible): ");
+        return password;
+    }
+
+    public static String showAccountAddressSelection(String[] accounts) {
+        String selectedAccount = (String) JOptionPane.showInputDialog(
+                null,
+                "Select your account (account must be unlocked):\n",
+                "Account Selection",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                accounts,
+                accounts[0]);
+
+        return selectedAccount;
+    }
+
+    public static void setUIFont(javax.swing.plaf.FontUIResource f) {
+        java.util.Enumeration keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements()) {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof javax.swing.plaf.FontUIResource)
+                UIManager.put(key, f);
+        }
+    }
+
+    public static void setLookAndFeelToSystemDefault() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void update(Observable o, Object arg) {
-		if (o instanceof AqualifeController && arg != null && arg instanceof Event) {
+        if (o instanceof AqualifeController && arg != null && arg instanceof Event) {
             Event event = (Event) arg;
             switch (event) {
                 case REGISTRATION:
@@ -90,7 +137,6 @@ public class AquaGui extends JFrame implements Runnable, Observer {
                     break;
                 case FISHBASE:
                     fishDialog.fillOwnedFishTokenList();
-//                    JOptionPane.showMessageDialog(this, "You own a new FishToken: " + event.tokenId);
                     break;
                 case MARKETPLACE:
                     fishDialog.fillForSaleFishTokenList();
@@ -101,5 +147,4 @@ public class AquaGui extends JFrame implements Runnable, Observer {
             }
         }
     }
-
 }
