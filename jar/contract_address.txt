@@ -1,0 +1,3 @@
+Broker Address:0x8d51c84b30d1f368f4df39860cf3d004c9188e5a
+FishBase Address:0x6277558088545c9cd6ccb12360991d3c4b6a1401
+Marketplace Address:0xa1a9f2128b07ebc4517edbae35a5ed0bbf120643
