@@ -136,9 +136,8 @@ public class AquaGui extends JFrame implements Observer {
                     setTitle(tankModel.getId());
                     break;
                 case FISHBASE:
-                    fishDialog.fillOwnedFishTokenList();
-                    break;
                 case MARKETPLACE:
+                    fishDialog.fillOwnedFishTokenList();
                     fishDialog.fillForSaleFishTokenList();
                     break;
                 case NEW_BLOCK:
