@@ -7,3 +7,5 @@ geth removedb --datadir ./test/ethereum
 solc ./src/ethereum/Broker.sol --bin --abi --optimize --overwrite -o ./out/contract
 
 web3j solidity generate ./out/contract/Broker.bin ./out/contract/Broker.abi -o ./src/ -p client
+
+java -cp AqualifeDApp.jar aqualife.deploy.DeploySmartContract

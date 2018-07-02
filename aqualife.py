@@ -10,6 +10,7 @@ PATH_SMART_CONTRACT_OUT = "./contract/"
 PATH_GETH_DATADIR = "./test/ethereum/"
 PATH_ACCOUNT_PASSWD = "./test/passwd.txt"
 PATH_GENESIS_FILE = "./test/genesis.json"
+PATH_AQUALIFE_JAR = "./jar/"
 
 ACCOUNT_NUM = 5
 DEFAULT_ETHER = "100000000000000000000"  # in Wei
@@ -85,7 +86,7 @@ def build():
 
 
 def deploy_contract():
-    pass
+    os.system("java -cp " + PATH_AQUALIFE_JAR + "AqualifeDApp.jar aqualife.deploy.DeploySmartContract")
 
 
 def clean_geth_db():
@@ -107,8 +108,9 @@ def run():
 def print_help():
     print("Possible arguments:")
     print("\tinit - create several test accounts and initialize the test blockchain using the genesis file")
-    print("\tbuild - compile smart contract and create wrapper class")
-    print("\trun - start the geth test node")
+    print("\tbuild - compile smart contracts and create wrapper classes")
+    print("\tdeploy - deploy smart contracts")
+    print("\trun - start a geth test node in a private network")
     print("\tcleandb - remove the geth database")
     print("\tclean - cleanup")
 
@@ -122,12 +124,14 @@ def main():
 
     argument = sys.argv[1]
 
-    if argument == "run":
-        run()
+    if argument == "init":
+        init()
     elif argument == "build":
         build()
-    elif argument == "init":
-        init()
+    elif argument == "deploy":
+        deploy_contract()
+    elif argument == "run":
+        run()
     elif argument == "cleandb":
         clean_geth_db()
     elif argument == "clean":
