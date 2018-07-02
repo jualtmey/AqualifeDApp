@@ -76,7 +76,7 @@ def generate_web3j_wrapper():
     for i in range(0, len(files), 2):
         path_contract_abi = PATH_SMART_CONTRACT_OUT + files[i]
         path_contract_bin = PATH_SMART_CONTRACT_OUT + files[i + 1]
-        os.system("web3j solidity generate " + path_contract_bin + " " + path_contract_abi + " -o ./src/ -p client.contracts")
+        os.system("web3j solidity generate " + path_contract_bin + " " + path_contract_abi + " -o ./src/ -p aqualife.client.contracts")
 
 
 def build():
