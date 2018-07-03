@@ -2,6 +2,7 @@ package aqualife.client.model;
 
 import aqualife.client.controller.ClientForwarder;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +13,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 	public static final int HEIGHT = 350;
 	protected static final int MAX_FISHIES = 5;
 	protected static final Random rand = new Random();
-	protected volatile String id;
+	protected volatile BigInteger id;
 	protected final Set<FishModel> fishies;
 	protected int fishCounter = 0;
 	protected final ClientForwarder forwarder;
@@ -22,7 +23,7 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 		this.forwarder = forwarder;
 	}
 
-	public synchronized void onRegistration(String id) {
+	public synchronized void onRegistration(BigInteger id) {
 		this.id = id;
 	}
 
@@ -31,8 +32,12 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 		fishies.add(fish);
 	}
 
-	public String getId() {
+	public BigInteger getId() {
 		return id;
+	}
+
+	public String getIdString() {
+		return "Tank" + id;
 	}
 
 	public synchronized int getFishCounter() {

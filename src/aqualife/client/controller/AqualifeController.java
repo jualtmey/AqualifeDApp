@@ -39,18 +39,18 @@ public class AqualifeController extends Observable {
     }
 
     public void start() {
-        clientForwarder.getAllTokensInTank().forEach(tokenId -> receiveFishRandom(tokenId));
-
         clientForwarder.register(); // TODO: handle if already registered (Gui will not update to TankID)
         if (!clientForwarder.isMarketplaceApprovedForAll()) {
             clientForwarder.approveMarketplaceForAll();
         }
 
+        clientForwarder.getAllTokensInTank().forEach(tokenId -> receiveFishRandom(tokenId));
+
         tankModel.run();
     }
 
     public void stop() {
-        clientForwarder.deregister(tankModel.getId());
+        clientForwarder.deregister();
         System.exit(0);
     }
 
@@ -78,6 +78,10 @@ public class AqualifeController extends Observable {
         clientForwarder.summon(tokenId);
     }
 
+    public BigInteger findFish(BigInteger tokenId) {
+        return clientForwarder.tokenIdToCurrentTank(tokenId);
+    }
+
     public void receiveFish(BigInteger tokenId, int y, Direction direction) {
         FishInfo fishInfo = clientForwarder.getFishInfo(tokenId);
         tankModel.receiveFish(new FishModel(fishInfo, 0, y, direction));
@@ -92,7 +96,7 @@ public class AqualifeController extends Observable {
     }
 
     public void onRegistrationEvent(BigInteger tankId) {
-        tankModel.onRegistration("Tank" + tankId);
+        tankModel.onRegistration(tankId);
         setChanged();
         notifyObservers(Event.REGISTRATION);
     }

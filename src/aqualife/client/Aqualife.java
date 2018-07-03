@@ -1,6 +1,7 @@
 package aqualife.client;
 
 import aqualife.client.aview.AquaGui;
+import aqualife.client.aview.FishView;
 import aqualife.client.controller.AqualifeController;
 import aqualife.client.controller.ClientCommunicator;
 

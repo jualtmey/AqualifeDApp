@@ -37,7 +37,7 @@ public class ClientForwarder {
         }
     }
 
-    public void deregister(String id) {
+    public void deregister() {
         LOGGER.info("Deregister...");
         try {
             broker.deregister().send();
@@ -101,7 +101,7 @@ public class ClientForwarder {
 
             tokenTuple = fishBase.getFishToken(tokenId).send();
             ownerAddress = fishBase.ownerOf(tokenId).send();
-            ownerTankId = broker.clients(ownerAddress).send().getValue1();
+            ownerTankId = broker.tankIdOf(ownerAddress).send();
             price = getTokenPrice(tokenId);
 
         } catch (Exception e) {
@@ -109,6 +109,15 @@ public class ClientForwarder {
         }
 
         return new FishInfo(tokenId, tokenTuple.getValue1(), tokenTuple.getValue2().intValue(), ownerTankId, price);
+    }
+
+    public BigInteger tokenIdToCurrentTank(BigInteger tokenId) {
+        try {
+            return broker.tokenIdToCurrentTank(tokenId).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public List<BigInteger> getOwnedTokens() {
@@ -162,7 +171,7 @@ public class ClientForwarder {
 
     public List<BigInteger> getAllTokensInTank() {
         try {
-            return broker.getAllTokensInTank(clientCommunicator.getAccountAddress()).send();
+            return broker.getAllTokensInTank(broker.tankIdOf(clientCommunicator.getAccountAddress()).send()).send();
         } catch (Exception e) {
             e.printStackTrace();
         }

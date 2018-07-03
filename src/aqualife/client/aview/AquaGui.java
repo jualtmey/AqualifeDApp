@@ -133,7 +133,7 @@ public class AquaGui extends JFrame implements Observer {
             Event event = (Event) arg;
             switch (event) {
                 case REGISTRATION:
-                    setTitle(tankModel.getId());
+                    setTitle(tankModel.getIdString());
                     break;
                 case FISHBASE:
                 case MARKETPLACE:

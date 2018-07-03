@@ -8,9 +8,8 @@ contract Broker is Ownable {
     // === STRUCTS ===
 
     struct Client {
-        uint256 tankId;
-        address left;
-        address right;
+        uint256 left;
+        uint256 right;
         bool registered;
     }
 
@@ -35,77 +34,97 @@ contract Broker is Ownable {
 
     // === CONSTANTS ===
 
+    uint256 constant INACTIVE_AFTER_BLOCKS = 10;
+
     int constant DIRECTION_LEFT = -1;
     int constant DIRECTION_RIGHT = 1;
 
     // === STORAGE ===
 
-    mapping (address => Client) public clients;
-    mapping (uint256 => address) public tokenIdToCurrentTank;
-    mapping (address => uint256) public tokensInTank;
+    Client[] public clients;
 
-    uint public clientIdCounter = 1;
-    uint public size;
-    address public firstClient;
-    address public lastClient;
+    mapping (address => uint256) public tankIdOf;
+    mapping (uint256 => address) public addressOf;
+    mapping (uint256 => uint256) public tokenIdToCurrentTank;
+    mapping (uint256 => uint256) public tokensInTank;
+
+    mapping (uint256 => uint256) public lastHandoff; // block number
+
+    uint256 public firstClient;
+    uint256 public lastClient;
+    uint256 public size;
 
     FishBase public fishBase;
 
     // === MODIFIER ===
 
-    modifier whenRegistered {
-        require(clients[msg.sender].registered, "You are not registered.");
+    modifier whenRegistered() {
+        require(clients[tankIdOf[msg.sender]].registered, "You are not registered.");
         _;
     }
 
-    modifier whenNotRegistered {
-        require(!clients[msg.sender].registered, "You are already registered.");
+    modifier whenNotRegistered() {
+        require(!clients[tankIdOf[msg.sender]].registered, "You are already registered.");
         _;
     }
 
-    modifier holds(uint256 tokenId) {
-        require(tokenIdToCurrentTank[tokenId] == msg.sender, "Fish isn't in your tank.");
+    modifier holds(uint256 _tokenId) {
+        require(tokenIdToCurrentTank[_tokenId] == tankIdOf[msg.sender], "Fish isn't in your tank.");
         _;
     }
 
     // === CONSTRUCTOR ===
 
     constructor() public {
-
+        clients.push(Client(0, 0, false));
     }
 
     // === FUNCTIONS ===
 
     function register() public whenNotRegistered {
-        if (size == 0) {
-            firstClient = msg.sender;
-            lastClient = msg.sender;
-        }
+        uint256 tankId = tankIdOf[msg.sender];
 
-        uint256 tankId = clients[msg.sender].tankId;
+        // client registers for the first time
         if (tankId == 0) {
-            tankId = clientIdCounter;
-            clientIdCounter++;
+            tankId = clients.push(Client(0, 0, false)) - 1;
+            tankIdOf[msg.sender] = tankId;
+            addressOf[tankId] = msg.sender;
         }
 
-        clients[msg.sender] = Client(tankId, lastClient, firstClient, true);
-        clients[firstClient].left = msg.sender;
-        clients[lastClient].right =msg.sender;
+        if (size == 0) {
+            firstClient = tankId;
+            lastClient = tankId;
+        }
 
-        lastClient = msg.sender;
+        clients[tankId] = Client(lastClient, firstClient, true);
+
+        clients[firstClient].left = tankId;
+        clients[lastClient].right = tankId;
+
+        lastClient = tankId;
 
         emit Register(msg.sender, tankId);
 
         size++;
     }
 
-    function deregister() public whenRegistered {
-        Client storage client = clients[msg.sender];
+    function deregister() external whenRegistered {
+        _deregister(tankIdOf[msg.sender]);
+    }
 
-        if (msg.sender == firstClient) {
+    function deregister(uint256 _tankId) external {
+        require(isInactive(_tankId), "Only if client is inactive.");
+        require(clients[_tankId].registered, "Only if client is registered.");
+        _deregister(_tankId);
+    }
+
+    function _deregister(uint256 _tankId) private {
+        Client storage client = clients[_tankId];
+
+        if (_tankId == firstClient) {
             firstClient = client.right;
         }
-        if (msg.sender == lastClient) {
+        if (_tankId == lastClient) {
             lastClient = client.left;
         }
 
@@ -116,39 +135,51 @@ contract Broker is Ownable {
         size--;
     }
 
-    function handoffFish(uint256 _tokenId, int _y, int8 _direction) external whenRegistered holds(_tokenId) {
+    function handoffFish(uint256 _tokenId, int _y, int8 _direction) external
+    whenRegistered holds(_tokenId) {
         // TODO: check whether tokenId exists?
         // TODO: direction and y could be manipulated by malicious clients (e.g. two adjacent clients hold all fishies by sending them left/right)
-        address to;
+        uint256 fromTankId = tankIdOf[msg.sender];
+        uint256 toTankId;
 
         if (_direction == DIRECTION_LEFT) {
-            to = clients[msg.sender].left;
+            toTankId = clients[fromTankId].left;
         } else { // right
-            to = clients[msg.sender].right;
+            toTankId = clients[fromTankId].right;
         }
 
-        tokenIdToCurrentTank[_tokenId] = to;
-        tokensInTank[msg.sender]--;
-        tokensInTank[to]++;
+        lastHandoff[fromTankId] = block.number;
+        if (tokensInTank[toTankId] == 0) {
+            lastHandoff[toTankId] = block.number;
+        }
 
-        emit HandoffFish(to, _tokenId, _y, _direction);
+        tokenIdToCurrentTank[_tokenId] = toTankId;
+        tokensInTank[fromTankId]--;
+        tokensInTank[toTankId]++;
+
+        emit HandoffFish(addressOf[toTankId], _tokenId, _y, _direction);
     }
 
     function summonFish(uint256 _tokenId) external whenRegistered {
-        address currentTank = tokenIdToCurrentTank[_tokenId];
+        uint256 senderTank = tankIdOf[msg.sender];
+        uint256 currentTank = tokenIdToCurrentTank[_tokenId];
 
-        require(currentTank != msg.sender, "Tank holds fish already.");
-        require(msg.sender == fishBase.ownerOf(_tokenId), "For owner of this fish only.");
+        require(currentTank != senderTank, "Tank holds fish already.");
+        require(senderTank == tankIdOf[fishBase.ownerOf(_tokenId)] || isInactive(currentTank));
 
-        tokensInTank[currentTank]--;
-        tokenIdToCurrentTank[_tokenId] = msg.sender;
-        tokensInTank[msg.sender]++;
+        if (currentTank != 0) {
+            tokensInTank[currentTank]--;
+        }
+        tokenIdToCurrentTank[_tokenId] = senderTank;
+        tokensInTank[senderTank]++;
+
+        lastHandoff[senderTank] = block.number;
 
         emit SummonFish(msg.sender, _tokenId);
     }
 
-    function getAllTokensInTank(address _address) external view returns (uint256[]) {
-        uint256 tokenCount = tokensInTank[_address];
+    function getAllTokensInTank(uint256 _tankId) external view returns (uint256[]) {
+        uint256 tokenCount = tokensInTank[_tankId];
 
         if (tokenCount == 0) {
             return new uint256[](0);
@@ -158,7 +189,7 @@ contract Broker is Ownable {
             uint256 resultIndex = 0;
 
             for (uint256 tokenId = 0; tokenId < totalFishToken; tokenId++) {
-                if (tokenIdToCurrentTank[tokenId] == _address) {
+                if (tokenIdToCurrentTank[tokenId] == _tankId) {
                     result[resultIndex] = tokenId;
                     resultIndex++;
                 }
@@ -166,6 +197,16 @@ contract Broker is Ownable {
 
             return result;
         }
+    }
+
+    function isInactive(uint256 _tankId) public view returns (bool) {
+        if (tokensInTank[_tankId] > 0) {
+            if (lastHandoff[_tankId] + INACTIVE_AFTER_BLOCKS < block.number) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function setFishBase(address _newAddress) external onlyOwner {

@@ -71,6 +71,18 @@ public class FishDialog extends JDialog {
 
             JPanel topButtonsPanel = new JPanel(new FlowLayout(FlowLayout.TRAILING));
 
+            JButton findButton = new JButton("Find");
+            findButton.addActionListener(e -> {
+                FishInfo fishInfo = (FishInfo) topList.getSelectedValue();
+                if (fishInfo == null) {
+                    return;
+                }
+
+                BigInteger tankId = aqualifeController.findFish(fishInfo.getTokenId());
+
+                JOptionPane.showMessageDialog(this, "Your fish is visiting Tank " + tankId + "!");
+            });
+
             JButton summonButton = new JButton("Summon");
             summonButton.addActionListener(e -> {
                 FishInfo fishInfo = (FishInfo) topList.getSelectedValue();
@@ -120,6 +132,7 @@ public class FishDialog extends JDialog {
                 aqualifeController.cancelSell(fishInfo);
             });
 
+            topButtonsPanel.add(findButton);
             topButtonsPanel.add(summonButton);
             topButtonsPanel.add(renameButton);
             topButtonsPanel.add(sellButton);
