@@ -118,6 +118,10 @@ contract Marketplace is Ownable {
         return sales;
     }
 
+    function transferContractBalanceToOwner() external onlyOwner {
+        owner.transfer(address(this).balance);
+    }
+
     function setBroker(address _newAddress) external onlyOwner {
         broker = Broker(_newAddress);
     }
