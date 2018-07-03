@@ -22,8 +22,8 @@ jar {
     }
 
     // include resources (images, ...)
-    into("aqualife.client/resources") {
-        from("src/aqualife.client/resources")
+    into("aqualife/client/resources") {
+        from("src/aqualife/client/resources")
     }
 
     // include all external jar libraries (dependencies) and exclude signature files
