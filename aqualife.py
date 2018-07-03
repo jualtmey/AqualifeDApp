@@ -11,6 +11,7 @@ PATH_GETH_DATADIR = "./test/ethereum/"
 PATH_ACCOUNT_PASSWD = "./test/passwd.txt"
 PATH_GENESIS_FILE = "./test/genesis.json"
 PATH_AQUALIFE_JAR = "./jar/"
+PATH_TO_JAVA_JDK = ""  # set here the path to the java jdk used by gradle, if you don't want to use the default path
 
 ACCOUNT_NUM = 5
 DEFAULT_ETHER = "100000000000000000000"  # in Wei
@@ -57,7 +58,7 @@ def init():
     os.system("geth --networkid 55 init ./test/Genesis.json --datadir " + PATH_GETH_DATADIR)
 
 
-def compile_contract():
+def compile_contracts():
     print("Compile smart contracts...")
 
     if not os.path.exists(PATH_SMART_CONTRACT_OUT):
@@ -71,7 +72,7 @@ def compile_contract():
 
 
 def generate_web3j_wrapper():
-    print("Generate web3j wrapper class...")
+    print("Generate web3j wrapper classes...")
 
     files = os.listdir(PATH_SMART_CONTRACT_OUT)
     for i in range(0, len(files), 2):
@@ -80,9 +81,20 @@ def generate_web3j_wrapper():
         os.system("web3j solidity generate " + path_contract_bin + " " + path_contract_abi + " -o ./src/ -p aqualife.client.contracts")
 
 
+def compile_project():
+    print("Compiling java project...")
+
+    use_java_jdk = ""
+    if len(PATH_TO_JAVA_JDK) != 0:
+        use_java_jdk = "-Dorg.gradle.java.home=" + PATH_TO_JAVA_JDK
+
+    os.system("gradle build " + use_java_jdk)
+
+
 def build():
-    compile_contract()
+    compile_contracts()
     generate_web3j_wrapper()
+    compile_project()
 
 
 def deploy_contract():
@@ -99,6 +111,7 @@ def clean():
         shutil.rmtree(PATH_GETH_DATADIR)
     if os.path.exists(PATH_SMART_CONTRACT_OUT):
         shutil.rmtree(PATH_SMART_CONTRACT_OUT)
+    os.system("gradle clean")
 
 
 def run():
@@ -108,7 +121,7 @@ def run():
 def print_help():
     print("Possible arguments:")
     print("\tinit - create several test accounts and initialize the test blockchain using the genesis file")
-    print("\tbuild - compile smart contracts and create wrapper classes")
+    print("\tbuild - compile smart contracts, create wrapper classes and build project")
     print("\tdeploy - deploy smart contracts")
     print("\trun - start a geth test node in a private network")
     print("\tcleandb - remove the geth database")
