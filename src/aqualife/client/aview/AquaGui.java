@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.*;
 
 @SuppressWarnings("serial")
@@ -79,7 +81,7 @@ public class AquaGui extends JFrame implements Observer {
 
     public static String showWalletFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setCurrentDirectory(new File("C:/Users/Julian/Desktop/AqualifeDApp/test/ethereum/keystore"));
+        fileChooser.setCurrentDirectory(Paths.get("../test/").toFile());
         fileChooser.setDialogTitle("Select Wallet File (Account)");
 
         int returnVal = fileChooser.showOpenDialog(null);

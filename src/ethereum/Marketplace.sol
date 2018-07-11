@@ -37,7 +37,7 @@ contract Marketplace is Ownable {
     mapping (uint256 => Offering) public saleOf;
     uint256 private numberOfSales;
 
-    uint public newFishPrice = 1e18; // in Wei (1e18 Wei = 1 Ether)
+    uint public newFishPrice = 1e17; // in Wei (1e18 Wei = 1 Ether)
 
     Broker public broker;
     FishBase public fishBase;

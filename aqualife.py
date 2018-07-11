@@ -11,7 +11,7 @@ PATH_GETH_DATADIR = "./test/ethereum/"
 PATH_ACCOUNT_PASSWD = "./test/passwd.txt"
 PATH_GENESIS_FILE = "./test/genesis.json"
 PATH_AQUALIFE_JAR = "./jar/"
-PATH_TO_JAVA_JDK = '"C:\Program Files\Java\jdk1.8.0_112"'  # set here the path to the java jdk used by gradle, if you don't want to use the default path
+PATH_TO_JAVA_JDK = ''  # set here the path to the java jdk used by gradle, if you don't want to use the default path
 
 ACCOUNT_NUM = 5
 DEFAULT_ETHER = "100000000000000000000"  # in Wei
@@ -68,7 +68,7 @@ def compile_contracts():
     files = os.listdir(PATH_SMART_CONTRACT_SRC)
     for file in files:
         path_contract_src = PATH_SMART_CONTRACT_SRC + file
-        os.system("solc " + path_contract_src + " --bin --abi --optimize --gas --overwrite -o " + PATH_SMART_CONTRACT_OUT)
+        os.system("solc " + path_contract_src + " --bin --abi --optimize --overwrite -o " + PATH_SMART_CONTRACT_OUT)
 
 
 def generate_web3j_wrapper():
