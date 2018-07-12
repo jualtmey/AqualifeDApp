@@ -5,9 +5,11 @@ This is an implementation of the program 'Aqualife' as a distributed application
 
 This project consists of a java application which uses a library to interact with an ethereum node and appropriate smart contracts. The program allows you to buy and trade `FishToken` in a very basic way. These `FishToken` can swim in the network between participating clients called `Tanks`. Each action is managed and controlled by three smart contracts, which depend on each other:
 
-1. `FishBase`: Implements the ERC721 Non-Fungible Token standard partially. Responsible for holding `FishToken` and transfering ownership of them
+1. `FishBase`: Implements the ERC721 Non-Fungible Token standard partially. Responsible for holding `FishToken` and transferring ownership of them
 1. `Broker`: Does the `FishToken` handoff (swimming), `Tank` registration and more
 1. `Marketplace`: Responsible for buying (creating) and trading `FishToken`
+
+![TankDemo](misc/TankDemo.png)
 
 ## Install
 
@@ -31,7 +33,7 @@ First, start a terminal and change to the AqualifeDApp root directory. Type in t
 
 ### On Private Test Network
 
-Use the utilites python script `aqualife.py` for setting up an private test network with `geth`.
+Use the utilities python script `aqualife.py` for setting up a private test network with `geth`.
 
 1. Initialize a private blockchain and create some test accounts with some ether: `python ./aqualife.py init`
 1. Run the private node locally: `python ./aqualife.py run`
@@ -55,7 +57,7 @@ Run the command `python ./aqualife.py build` to build the project. This will do:
 
 1. Compile smart contracts written in solidity with `solc`
 1. Generate the java wrapper classes with the `web3j` command line tool
-1. Compile the whole java project with `gradle` and create the executalbe jar file
+1. Compile the whole java project with `gradle` and create the executable jar file
 
 Note: `gradle` needs a properly installed JDK. You can specify the JDK to be used in the `aqualife.py` script if any error occurs.
 
