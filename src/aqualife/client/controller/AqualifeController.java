@@ -39,12 +39,17 @@ public class AqualifeController extends Observable {
     }
 
     public void start() {
-        clientForwarder.register(); // TODO: handle if already registered (Gui will not update to TankID)
+        clientForwarder.getAllTokensInTank().forEach(tokenId -> receiveFishRandom(tokenId));
+
+        if (clientForwarder.isRegistered()) {
+            onRegistrationEvent(clientForwarder.getTankId());
+        } else {
+            clientForwarder.register();
+        }
+
         if (!clientForwarder.isMarketplaceApprovedForAll()) {
             clientForwarder.approveMarketplaceForAll();
         }
-
-        clientForwarder.getAllTokensInTank().forEach(tokenId -> receiveFishRandom(tokenId));
 
         tankModel.run();
     }

@@ -178,4 +178,23 @@ public class ClientForwarder {
         return null;
     }
 
+    public boolean isRegistered() {
+        try {
+            BigInteger tankId = getTankId();
+            return broker.clients(tankId).send().getValue3();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public BigInteger getTankId() {
+        try {
+            return broker.tankIdOf(clientCommunicator.getAccountAddress()).send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
