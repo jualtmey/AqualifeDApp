@@ -51,10 +51,11 @@ public class AqualifeController extends Observable {
             clientForwarder.approveMarketplaceForAll();
         }
 
-        tankModel.run();
+        tankModel.start();
     }
 
     public void stop() {
+        tankModel.stop();
         clientForwarder.deregister();
         System.exit(0);
     }

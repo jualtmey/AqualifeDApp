@@ -18,6 +18,8 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 	protected int fishCounter = 0;
 	protected final ClientForwarder forwarder;
 
+	private boolean running;
+
 	public TankModel(ClientForwarder forwarder) {
 		this.fishies = Collections.newSetFromMap(new ConcurrentHashMap<FishModel, Boolean>());
 		this.forwarder = forwarder;
@@ -68,9 +70,18 @@ public class TankModel extends Observable implements Iterable<FishModel> {
 		notifyObservers();
 	}
 
-	public void run() {
+	public void start() {
+		running = true;
+		run();
+	}
+
+	public void stop() {
+		running = false;
+	}
+
+	private void run() {
 		try {
-			while (!Thread.currentThread().isInterrupted()) {
+			while (running && !Thread.currentThread().isInterrupted()) {
 				update();
 				TimeUnit.MILLISECONDS.sleep(10);
 			}
