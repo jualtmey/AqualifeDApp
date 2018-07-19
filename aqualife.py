@@ -10,7 +10,7 @@ PATH_SMART_CONTRACT_OUT = "./contract/"
 PATH_GETH_DATADIR = "./test/ethereum/"
 PATH_ACCOUNT_PASSWD = "./test/passwd.txt"
 PATH_GENESIS_FILE = "./test/genesis.json"
-PATH_AQUALIFE_JAR = "./jar/"
+PATH_AQUALIFE_JAR = "/jar"
 PATH_TO_JAVA_JDK = ''  # set here the path to the java jdk used by gradle, if you don't want to use the default path
 
 ACCOUNT_NUM = 5
@@ -18,7 +18,7 @@ DEFAULT_ETHER = "100000000000000000000"  # in Wei
 
 
 def create_account():
-    result_str = subprocess.run("geth account new --password " + PATH_ACCOUNT_PASSWD + " --datadir " + PATH_GETH_DATADIR, stdout=subprocess.PIPE).stdout.decode('ascii')
+    result_str = subprocess.run("geth account new --password " + PATH_ACCOUNT_PASSWD + " --datadir " + PATH_GETH_DATADIR, shell=True, stdout=subprocess.PIPE).stdout.decode('ascii')
 
     # extract the address from the geth output. Output looks like: "Address: {...}"
     start = result_str.find('{') + 1
@@ -55,7 +55,7 @@ def init():
     add_accounts_to_genesis(addresses)
 
     print("Initialize test blockchain...")
-    os.system("geth --networkid 55 init ./test/Genesis.json --datadir " + PATH_GETH_DATADIR)
+    os.system("geth --networkid 55 init " + PATH_GENESIS_FILE + " --datadir " + PATH_GETH_DATADIR)
 
 
 def compile_contracts():
@@ -98,7 +98,7 @@ def build():
 
 
 def deploy_contract():
-    os.system("java -Duser.dir=" + os.getcwd() + PATH_AQUALIFE_JAR + " -cp AqualifeDApp.jar aqualife.deploy.DeploySmartContract")
+    os.system('java -Duser.dir="' + os.getcwd() + PATH_AQUALIFE_JAR + '" -cp AqualifeDApp.jar aqualife.deploy.DeploySmartContract')
 
 
 def clean_geth_db():
