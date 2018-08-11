@@ -9,7 +9,7 @@ This project consists of a java application which uses a library to interact wit
 1. `Broker`: Does the `FishToken` handoff (swimming), `Tank` registration and more
 1. `Marketplace`: Responsible for buying (creating) and trading `FishToken`
 
-![TankDemo](misc/TankDemo.png)
+![TankDemo](misc/TankDemo2.png)
 
 ## Install
 

@@ -32,10 +32,6 @@ import static org.web3j.tx.gas.DefaultGasProvider.GAS_PRICE;
 
 public class ClientCommunicator {
 
-//    private static final String BROKER_ADDRESS = "0xafb05e00747697d8bddd9b66da1097288392fbe6";
-//    private static final String FISH_BASE_ADDRESS = "0x1cc65d270391c75e9579749635feb0ecf39fc0f1";
-//    private static final String MARKETPLACE_ADDRESS = "0x7883f9be1b671f8ee8d185a84c2c8d9adad0bbfd";
-
     private static final int POLLING_INTERVAL = 1000; // millis
     private static final int POLLING_TIMEOUT = 5 * 60000; // millis
     private static final int POLLING_ATTEMPTS = POLLING_TIMEOUT / POLLING_INTERVAL;
@@ -48,9 +44,6 @@ public class ClientCommunicator {
     private Broker broker;
     private FishBase fishBase;
     private Marketplace marketplace;
-
-//    private ClientForwarder forwarder;
-//    private ClientReceiver receiver;
 
     private static final Logger LOGGER = Logger.getLogger(ClientCommunicator.class.getName());
 
@@ -72,21 +65,6 @@ public class ClientCommunicator {
 
         transactionManager = new FastRawTransactionManager(
                 web3, credentials, new PollingTransactionReceiptProcessor(web3, POLLING_INTERVAL, POLLING_ATTEMPTS));
-
-//        Callback callback = new Callback() {
-//            @Override
-//            public void accept(TransactionReceipt transactionReceipt) {
-//
-//            }
-//
-//            @Override
-//            public void exception(Exception e) {
-//                e.printStackTrace();
-//            }
-//        };
-//
-//        transactionManager = new FastRawTransactionManager(
-//                web3, credentials, new QueuingTransactionReceiptProcessor(web3, callback, POLLING_ATTEMPTS, POLLING_INTERVAL));
 
         accountAddress = credentials.getAddress();
     }
@@ -164,26 +142,6 @@ public class ClientCommunicator {
         // length of topic needs to be 64 characters (32 byte / 256 bit)
         return "0x000000000000000000000000" + address.substring(2);
     }
-
-//    public ClientForwarder getClientForwarder() {
-//        if (broker == null) {
-//            throw new RuntimeException("Broker not initialized");
-//        }
-//        if (forwarder == null) {
-//            forwarder = new ClientForwarder();
-//        }
-//        return forwarder;
-//    }
-//
-//    public ClientReceiver getClientReceiver(TankModel tankModel) {
-//        if (broker == null) {
-//            throw new RuntimeException("Broker not initialized");
-//        }
-//        if (receiver == null) {
-//            receiver = new ClientReceiver(tankModel);
-//        }
-//        return receiver;
-//    }
 
     public Web3j getWeb3() {
         return web3;
